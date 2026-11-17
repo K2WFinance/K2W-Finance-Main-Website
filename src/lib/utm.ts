@@ -58,33 +58,43 @@ export function extractAllowlistedParams(
 
 /**
  * Safely reads stored attribution from sessionStorage.
+ * Strictly filters against the allowlist: unknown stored keys must NEVER reach attribution.
  * If data is corrupted, clears it and returns null without throwing.
  */
-export function getStoredAttribution(): UtmAttribution | null {
-  if (typeof window === "undefined") return null;
+export function getStoredAttribution(
+  allowlist: readonly string[] = APPROVED_UTM_ALLOWLIST,
+  storage: Storage | null = typeof window !== "undefined" ? window.sessionStorage : null
+): UtmAttribution | null {
+  if (!storage || allowlist.length === 0) return null;
 
   try {
-    const raw = window.sessionStorage.getItem(STORAGE_KEY);
+    const raw = storage.getItem(STORAGE_KEY);
     if (!raw) return null;
 
     const parsed = JSON.parse(raw);
     if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
-      window.sessionStorage.removeItem(STORAGE_KEY);
+      try {
+        storage.removeItem(STORAGE_KEY);
+      } catch {
+        // Ignore safe clear failure
+      }
       return null;
     }
 
-    // Return sanitized object
+    // Filter strictly against the approved allowlist and sanitize each value
     const sanitized: UtmAttribution = {};
     for (const [k, v] of Object.entries(parsed)) {
-      if (typeof v === "string") {
+      if (allowlist.includes(k) && typeof v === "string") {
         const cleanVal = sanitizeValue(v);
-        if (cleanVal) sanitized[k] = cleanVal;
+        if (cleanVal) {
+          sanitized[k] = cleanVal;
+        }
       }
     }
     return Object.keys(sanitized).length > 0 ? sanitized : null;
   } catch {
     try {
-      window.sessionStorage.removeItem(STORAGE_KEY);
+      storage.removeItem(STORAGE_KEY);
     } catch {
       // Ignore sessionStorage access errors
     }
@@ -93,14 +103,28 @@ export function getStoredAttribution(): UtmAttribution | null {
 }
 
 /**
- * Safely stores attribution in sessionStorage.
+ * Safely stores attribution in sessionStorage, enforcing allowlist filtering and sanitization.
  */
-export function setStoredAttribution(attribution: UtmAttribution): boolean {
-  if (typeof window === "undefined") return false;
-  if (!attribution || Object.keys(attribution).length === 0) return false;
+export function setStoredAttribution(
+  attribution: UtmAttribution,
+  allowlist: readonly string[] = APPROVED_UTM_ALLOWLIST,
+  storage: Storage | null = typeof window !== "undefined" ? window.sessionStorage : null
+): boolean {
+  if (!storage || !attribution || allowlist.length === 0) return false;
 
   try {
-    window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(attribution));
+    const sanitized: UtmAttribution = {};
+    for (const [k, v] of Object.entries(attribution)) {
+      if (allowlist.includes(k) && typeof v === "string") {
+        const cleanVal = sanitizeValue(v);
+        if (cleanVal) {
+          sanitized[k] = cleanVal;
+        }
+      }
+    }
+    if (Object.keys(sanitized).length === 0) return false;
+
+    storage.setItem(STORAGE_KEY, JSON.stringify(sanitized));
     return true;
   } catch {
     return false;
@@ -111,11 +135,13 @@ export function setStoredAttribution(attribution: UtmAttribution): boolean {
  * Clears stored attribution after verified real API success only.
  * Demo form validation must NEVER invoke this.
  */
-export function clearStoredAttribution(): void {
-  if (typeof window === "undefined") return;
+export function clearStoredAttribution(
+  storage: Storage | null = typeof window !== "undefined" ? window.sessionStorage : null
+): void {
+  if (!storage) return;
 
   try {
-    window.sessionStorage.removeItem(STORAGE_KEY);
+    storage.removeItem(STORAGE_KEY);
   } catch {
     // Ignore storage failure
   }
@@ -125,33 +151,41 @@ export function clearStoredAttribution(): void {
  * Captures landing attribution on page mount.
  * Returns null immediately if collection is disabled.
  */
-export function captureLandingAttribution(): UtmAttribution | null {
-  if (!UTM_COLLECTION_ENABLED || typeof window === "undefined") {
+export function captureLandingAttribution(
+  allowlist: readonly string[] = APPROVED_UTM_ALLOWLIST,
+  searchString: string = typeof window !== "undefined" ? window.location.search : "",
+  storage: Storage | null = typeof window !== "undefined" ? window.sessionStorage : null
+): UtmAttribution | null {
+  if (!UTM_COLLECTION_ENABLED || !storage || allowlist.length === 0) {
     return null;
   }
 
-  const liveParams = extractAllowlistedParams(window.location.search);
+  const liveParams = extractAllowlistedParams(searchString, allowlist);
   if (Object.keys(liveParams).length > 0) {
-    setStoredAttribution(liveParams);
+    setStoredAttribution(liveParams, allowlist, storage);
     return liveParams;
   }
 
-  return getStoredAttribution();
+  return getStoredAttribution(allowlist, storage);
 }
 
 /**
  * Retrieves attribution for form submission:
  * Live URL values take priority; stored session attribution is used as fallback.
  */
-export function getAttributionForSubmission(): UtmAttribution | null {
-  if (!UTM_COLLECTION_ENABLED || typeof window === "undefined") {
+export function getAttributionForSubmission(
+  allowlist: readonly string[] = APPROVED_UTM_ALLOWLIST,
+  searchString: string = typeof window !== "undefined" ? window.location.search : "",
+  storage: Storage | null = typeof window !== "undefined" ? window.sessionStorage : null
+): UtmAttribution | null {
+  if (!UTM_COLLECTION_ENABLED || !storage || allowlist.length === 0) {
     return null;
   }
 
-  const liveParams = extractAllowlistedParams(window.location.search);
+  const liveParams = extractAllowlistedParams(searchString, allowlist);
   if (Object.keys(liveParams).length > 0) {
     return liveParams;
   }
 
-  return getStoredAttribution();
+  return getStoredAttribution(allowlist, storage);
 }

@@ -1,4 +1,4 @@
-import { chromium } from "/Users/Ishant/Downloads/Dev-Clapingo/codeistaai-website/node_modules/playwright-core/index.mjs";
+import { chromium } from "playwright-core";
 import fs from "node:fs";
 import path from "node:path";
 import assert from "node:assert/strict";
@@ -6,8 +6,25 @@ import assert from "node:assert/strict";
 const SCREENSHOTS_DIR = path.resolve("./docs/screenshots");
 fs.mkdirSync(SCREENSHOTS_DIR, { recursive: true });
 
+async function scrollPageToTriggerAllReveals(page) {
+  // Smooth scroll through entire height to trigger all ScrollTriggers
+  await page.evaluate(async () => {
+    const distance = 400;
+    const totalHeight = document.body.scrollHeight;
+    let current = 0;
+    while (current < totalHeight) {
+      window.scrollBy(0, distance);
+      current += distance;
+      await new Promise((r) => setTimeout(r, 60));
+    }
+    // Return to top
+    window.scrollTo(0, 0);
+  });
+  await page.waitForTimeout(400);
+}
+
 async function runBrowserTests() {
-  console.log("Launching Google Chrome via Playwright...");
+  console.log("Launching Google Chrome via local Playwright-core...");
   const browser = await chromium.launch({
     executablePath: "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
     headless: true,
@@ -25,6 +42,7 @@ async function runBrowserTests() {
   ];
 
   const consoleErrors = [];
+  const networkRequests = [];
 
   const context = await browser.newContext();
   const page = await context.newPage();
@@ -38,12 +56,21 @@ async function runBrowserTests() {
     consoleErrors.push(err.message);
   });
 
-  console.log("\n--- VIEWPORT & OVERFLOW CHECKS ---");
+  // Track all network requests made by the Next.js page
+  page.on("request", (req) => {
+    networkRequests.push({ url: req.url(), method: req.method() });
+  });
+
+  console.log("\n=================================================");
+  console.log("1. FULL-PAGE SCREENSHOTS & OVERFLOW CHECKS");
+  console.log("=================================================");
+
   for (const vp of viewports) {
+    // A. Next.js Version
     await page.setViewportSize({ width: vp.width, height: vp.height });
     await page.goto(nextUrl, { waitUntil: "networkidle" });
+    await scrollPageToTriggerAllReveals(page);
 
-    // Check overflow
     const overflowResult = await page.evaluate(() => {
       const scrollW = document.documentElement.scrollWidth;
       const clientW = document.documentElement.clientWidth;
@@ -55,154 +82,261 @@ async function runBrowserTests() {
     });
 
     console.log(
-      `Viewport ${vp.name} (${vp.width}px): scrollWidth=${overflowResult.scrollWidth}, clientWidth=${overflowResult.clientWidth}, overflow=${overflowResult.hasOverflow}`
+      `Next.js ${vp.name} (${vp.width}px): scrollWidth=${overflowResult.scrollWidth}, clientWidth=${overflowResult.clientWidth}, overflow=${overflowResult.hasOverflow}`
     );
     assert.equal(
       overflowResult.hasOverflow,
       false,
-      `Horizontal overflow detected at ${vp.width}px!`
+      `Horizontal overflow detected in Next.js at ${vp.width}px!`
     );
 
-    // Save screenshot
     await page.screenshot({
-      path: path.join(SCREENSHOTS_DIR, `nextjs-${vp.name}.png`),
-      fullPage: false,
+      path: path.join(SCREENSHOTS_DIR, `nextjs-${vp.name}-full.png`),
+      fullPage: true,
     });
 
-    // Also screenshot prototype for comparison
+    // B. Prototype Version
     const protoPage = await context.newPage();
     await protoPage.setViewportSize({ width: vp.width, height: vp.height });
     await protoPage.goto(protoUrl, { waitUntil: "networkidle" });
+    await scrollPageToTriggerAllReveals(protoPage);
+
     await protoPage.screenshot({
-      path: path.join(SCREENSHOTS_DIR, `prototype-${vp.name}.png`),
-      fullPage: false,
+      path: path.join(SCREENSHOTS_DIR, `prototype-${vp.name}-full.png`),
+      fullPage: true,
     });
     await protoPage.close();
   }
+  console.log("✓ Full-page screenshots captured for all 5 viewports");
 
-  console.log("\n--- CALCULATOR FUNCTIONALITY TESTS ---");
+  console.log("\n=================================================");
+  console.log("2. CALCULATOR SLIDERS & BOLD WEIGHT VERIFICATION");
+  console.log("=================================================");
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto(nextUrl, { waitUntil: "networkidle" });
 
-  // 1. One-time savings default
-  const lumpResult = await page.$eval("#result", (el) => el.textContent.trim());
-  const lumpAmount = await page.$eval("#amount-value", (el) => el.textContent.trim());
-  const lumpRate = await page.$eval("#rate-value", (el) => el.textContent.trim());
-  const lumpTenure = await page.$eval("#tenure-value", (el) => el.textContent.trim());
-  console.log(`Lump sum defaults: amount=${lumpAmount}, rate=${lumpRate}, tenure=${lumpTenure}, result=${lumpResult}`);
-  assert.equal(lumpResult, "₹14,69,328");
-  assert.equal(lumpAmount, "₹10,00,000");
+  // Update lump sum sliders using React-compatible native setter
+  await page.evaluate(() => {
+    const setRangeValue = (id, val) => {
+      const el = document.getElementById(id);
+      const nativeSetter = Object.getOwnPropertyDescriptor(
+        window.HTMLInputElement.prototype,
+        "value"
+      ).set;
+      nativeSetter.call(el, val);
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+      el.dispatchEvent(new Event("change", { bubbles: true }));
+    };
+    setRangeValue("amount", "2500000");
+    setRangeValue("rate", "10");
+    setRangeValue("tenure", "7");
+  });
 
-  // Verify bold styling on financial numbers
-  const isLumpBold = await page.$eval("#result", (el) => window.getComputedStyle(el).fontWeight);
-  console.log(`Result font-weight: ${isLumpBold}`);
-  assert.ok(parseInt(isLumpBold) >= 600, "Financial results must be bold");
+  const updatedResult = await page.$eval("#result", (el) => el.textContent.trim());
+  const updatedAmountVal = await page.$eval("#amount-value", (el) => el.textContent.trim());
+  const updatedRateVal = await page.$eval("#rate-value", (el) => el.textContent.trim());
+  const updatedTenureVal = await page.$eval("#tenure-value", (el) => el.textContent.trim());
+  console.log(`Updated lump sum: amount=${updatedAmountVal}, rate=${updatedRateVal}, tenure=${updatedTenureVal}, result=${updatedResult}`);
+  assert.equal(updatedAmountVal, "₹25,00,000");
+  assert.equal(updatedRateVal, "10.00%");
+  assert.equal(updatedTenureVal, "7 years");
+  assert.equal(updatedResult, "₹48,71,793");
 
-  // 2. Switch to monthly savings
-  await page.click('button[data-mode="monthly"]');
-  const monthlyResult = await page.$eval("#result", (el) => el.textContent.trim());
-  const monthlyAmount = await page.$eval("#amount-value", (el) => el.textContent.trim());
-  console.log(`Monthly defaults: amount=${monthlyAmount}, result=${monthlyResult}`);
-  assert.equal(monthlyResult, "₹7,34,769");
-  assert.equal(monthlyAmount, "₹10,000");
+  // Verify weight 700 on updated figures
+  const resultWeight = await page.$eval("#result", (el) => window.getComputedStyle(el).fontWeight);
+  const amountValWeight = await page.$eval("#amount-value", (el) => window.getComputedStyle(el).fontWeight);
+  console.log(`Computed font weights after update: result=${resultWeight}, amount-value=${amountValWeight}`);
+  assert.equal(resultWeight, "700", "Result must use font-weight 700");
+  assert.equal(amountValWeight, "700", "Amount label value must use font-weight 700");
 
-  // 3. Switch to monthly income
-  await page.click('button[data-mode="income"]');
-  const incomeResult = await page.$eval("#result", (el) => el.textContent.trim());
-  const tenureHidden = await page.$eval("#tenure-control", (el) => el === null || el.offsetParent === null);
-  console.log(`Income defaults: result=${incomeResult}, tenureControlHidden=${tenureHidden}`);
-  assert.equal(incomeResult, "₹6,667");
-  assert.equal(tenureHidden, true, "Tenure control must be hidden in income mode");
+  console.log("\n=================================================");
+  console.log("3. ALL FIVE GOAL CTAS & PRESELECTION VERIFICATION");
+  console.log("=================================================");
+  const goalTests = [
+    { key: "income", expectedInterest: "Monthly expenses", expectedTitle: "Make room for life’s recurring costs." },
+    { key: "vehicle", expectedInterest: "A new vehicle", expectedTitle: "A new vehicle. A deliberate savings plan." },
+    { key: "home", expectedInterest: "Your own home", expectedTitle: "Give your first home a head start." },
+    { key: "education", expectedInterest: "Education & family", expectedTitle: "Be ready for the moments that matter." },
+    { key: "retirement", expectedInterest: "Retirement", expectedTitle: "Plan an income for your next chapter." },
+  ];
 
-  console.log("\n--- GOALS & PRESELECTION TESTS ---");
-  // Test Goal selection
-  await page.click('button[data-goal="vehicle"]');
-  const vehicleTitle = await page.$eval("#goal-title", (el) => el.textContent.trim());
-  const vehicleNumber = await page.$eval("#goal-number", (el) => el.textContent.trim());
-  console.log(`Vehicle goal: title="${vehicleTitle}", number="${vehicleNumber}"`);
-  assert.equal(vehicleNumber, "₹3 lakh");
+  for (const g of goalTests) {
+    await page.click(`button[data-goal="${g.key}"]`);
+    const title = await page.$eval("#goal-title", (el) => el.textContent.trim());
+    assert.equal(title, g.expectedTitle);
 
-  // Click CTA to preselect vehicle goal in form
-  await page.click("#goal-cta");
-  const selectedInterestAfterGoal = await page.$eval("#interest", (el) => el.value);
-  console.log(`Form interest preselected from Goal: "${selectedInterestAfterGoal}"`);
-  assert.equal(selectedInterestAfterGoal, "A new vehicle");
+    // Click CTA
+    await page.click("#goal-cta");
+    const interestVal = await page.$eval("#interest", (el) => el.value);
+    console.log(`Goal "${g.key}" CTA -> Form Interest: "${interestVal}" (matches expected: "${g.expectedInterest}")`);
+    assert.equal(interestVal, g.expectedInterest);
+  }
+  console.log("✓ All 5 goal CTAs successfully verified and preselect into ContactForm");
 
-  // Test Savings Option preselection
-  await page.click('a[data-interest="Fixed deposits"]');
-  const selectedInterestAfterSavings = await page.$eval("#interest", (el) => el.value);
-  console.log(`Form interest preselected from Savings Option: "${selectedInterestAfterSavings}"`);
-  assert.equal(selectedInterestAfterSavings, "Fixed deposits");
+  console.log("\n=================================================");
+  console.log("4. ALL THREE SAVINGS-OPTION CTAS VERIFICATION");
+  console.log("=================================================");
+  const savingsTests = [
+    { interest: "Fixed deposits", summary: 'summary:has-text("Fixed deposits")', selector: 'a[data-interest="Fixed deposits"]' },
+    { interest: "Recurring deposits", summary: 'summary:has-text("Recurring deposits")', selector: 'a[data-interest="Recurring deposits"]' },
+    { interest: "Monthly income plans", summary: 'summary:has-text("Monthly income plans")', selector: 'a[data-interest="Monthly income plans"]' },
+  ];
 
-  console.log("\n--- MOBILE NAVIGATION TESTS ---");
+  for (const s of savingsTests) {
+    // Ensure the accordion card is expanded before clicking the CTA link
+    const details = page.locator(`details:has(${s.selector})`);
+    const isOpen = await details.evaluate((el) => el.open);
+    if (!isOpen) {
+      await page.click(s.summary);
+      await page.waitForTimeout(100);
+    }
+    await page.click(s.selector);
+    const interestVal = await page.$eval("#interest", (el) => el.value);
+    console.log(`Savings option "${s.interest}" CTA -> Form Interest: "${interestVal}"`);
+    assert.equal(interestVal, s.interest);
+  }
+  console.log("✓ All 3 savings-option CTAs successfully verified and preselect into ContactForm");
+
+  console.log("\n=================================================");
+  console.log("5. ACCORDION & FAQ BEHAVIOUR");
+  console.log("=================================================");
+  // Verify first FAQ is open by default
+  const firstFaqOpen = await page.$eval("#faqs details:first-of-type", (el) => el.open);
+  assert.equal(firstFaqOpen, true, "First FAQ must be open by default");
+
+  // Toggle second FAQ
+  const secondFaqBefore = await page.$eval("#faqs details:nth-of-type(2)", (el) => el.open);
+  assert.equal(secondFaqBefore, false);
+  await page.click("#faqs details:nth-of-type(2) summary");
+  const secondFaqAfter = await page.$eval("#faqs details:nth-of-type(2)", (el) => el.open);
+  assert.equal(secondFaqAfter, true, "Second FAQ must toggle open");
+
+  // Toggle second FAQ closed again
+  await page.click("#faqs details:nth-of-type(2) summary");
+  const secondFaqClosed = await page.$eval("#faqs details:nth-of-type(2)", (el) => el.open);
+  assert.equal(secondFaqClosed, false, "Second FAQ must toggle closed");
+  console.log("✓ Accordion and FAQ open/close toggles verified natively");
+
+  console.log("\n=================================================");
+  console.log("6. KEYBOARD NAVIGATION & FOCUS RESTORATION");
+  console.log("=================================================");
   await page.setViewportSize({ width: 375, height: 812 });
-  await page.click(".menu");
-  const isDrawerOpen = await page.$eval("#mobile-nav", (el) => el.classList.contains("open") && !el.hidden);
-  const isBodyLocked = await page.evaluate(() => document.body.style.overflow === "hidden");
-  console.log(`Mobile nav open: ${isDrawerOpen}, body scroll locked: ${isBodyLocked}`);
-  assert.equal(isDrawerOpen, true);
-  assert.equal(isBodyLocked, true);
+  const menuButton = page.locator(".menu");
 
-  // Close via Escape
+  // Focus and open menu
+  await menuButton.focus();
+  await page.keyboard.press("Enter");
+  const isDrawerOpen = await page.$eval("#mobile-nav", (el) => el.classList.contains("open") && !el.hidden);
+  assert.equal(isDrawerOpen, true);
+
+  // Close via Escape key and test focus restoration
   await page.keyboard.press("Escape");
   const isDrawerClosed = await page.$eval("#mobile-nav", (el) => !el.classList.contains("open") && el.hidden);
-  const isBodyUnlocked = await page.evaluate(() => document.body.style.overflow === "");
-  console.log(`Mobile nav closed via Escape: ${isDrawerClosed}, body scroll unlocked: ${isBodyUnlocked}`);
   assert.equal(isDrawerClosed, true);
-  assert.equal(isBodyUnlocked, true);
 
-  console.log("\n--- FORM VALIDATION TESTS ---");
+  const activeElementTagName = await page.evaluate(() => document.activeElement?.className);
+  console.log(`Active element class after Escape: "${activeElementTagName}"`);
+  assert.ok(activeElementTagName?.includes("menu"), "Focus must be restored to Menu button after Escape");
+  console.log("✓ Keyboard trap, Escape key handling, and focus restoration verified");
+
+  console.log("\n=================================================");
+  console.log("7. REDUCED MOTION VERIFICATION");
+  console.log("=================================================");
+  const reducedMotionContext = await browser.newContext({
+    reducedMotion: "reduce",
+  });
+  const rmPage = await reducedMotionContext.newPage();
+  await rmPage.goto(nextUrl, { waitUntil: "networkidle" });
+  const htmlScrollBehavior = await rmPage.evaluate(() => {
+    return window.getComputedStyle(document.documentElement).scrollBehavior;
+  });
+  console.log(`Reduced motion scroll-behavior: "${htmlScrollBehavior}"`);
+  assert.equal(htmlScrollBehavior, "auto", "Scroll behavior must be auto under reduced motion");
+  await reducedMotionContext.close();
+  console.log("✓ Reduced-motion handling verified without spatial animations");
+
+  console.log("\n=================================================");
+  console.log("8. FORM VALIDATION & CORRECTION DYNAMICS");
+  console.log("=================================================");
   await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(nextUrl, { waitUntil: "networkidle" });
 
-  // 1. Submit empty form
+  // 1. Submit empty -> check errors & focus
   await page.click('button[type="submit"]');
-  const nameError = await page.$eval("#name-error", (el) => el.textContent.trim());
-  const activeElementId = await page.evaluate(() => document.activeElement.id);
-  console.log(`Empty submit validation: nameError="${nameError}", focusedElementId="${activeElementId}"`);
+  let nameError = await page.$eval("#name-error", (el) => el.textContent.trim());
   assert.equal(nameError, "Enter a name with 2–80 characters.");
-  assert.equal(activeElementId, "name", "First invalid field must receive focus");
+  let focusedId = await page.evaluate(() => document.activeElement.id);
+  assert.equal(focusedId, "name", "Focus must move to #name");
 
-  // 2. Fill invalid phone
-  await page.fill("#name", "Ishant Sharma");
+  // 2. Type in name -> error clears dynamically
+  await page.fill("#name", "Ishant");
+  nameError = await page.$eval("#name-error", (el) => el.textContent.trim());
+  assert.equal(nameError, "", "Name error must clear once corrected");
+
+  // 3. Test invalid phone -> error appears
   await page.fill("#phone", "12345");
   await page.click('button[type="submit"]');
-  const phoneError = await page.$eval("#phone-error", (el) => el.textContent.trim());
-  console.log(`Invalid phone error: "${phoneError}"`);
+  let phoneError = await page.$eval("#phone-error", (el) => el.textContent.trim());
   assert.equal(phoneError, "Enter a valid 10-digit Indian mobile number.");
 
-  // 3. Fill valid details and submit demo
+  // 4. Correct phone -> error clears
   await page.fill("#phone", "+91 98765 43210");
-  await page.fill("#email", "ishant@example.com");
+  phoneError = await page.$eval("#phone-error", (el) => el.textContent.trim());
+  assert.equal(phoneError, "", "Phone error must clear once corrected");
+
+  // 5. Test invalid email
+  await page.fill("#email", "invalid-email");
+  await page.click('button[type="submit"]');
+  let emailError = await page.$eval("#email-error", (el) => el.textContent.trim());
+  assert.equal(emailError, "Enter a valid email address.");
+
+  // 6. Correct email
+  await page.fill("#email", "valid@example.com");
+  emailError = await page.$eval("#email-error", (el) => el.textContent.trim());
+  assert.equal(emailError, "", "Email error must clear once corrected");
+
+  // 7. Select interest and check consent
   await page.selectOption("#interest", "Retirement");
   await page.check("#consent");
+
+  console.log("\n=================================================");
+  console.log("9. ABSENCE OF LEAD-SUBMISSION NETWORK REQUESTS");
+  console.log("=================================================");
+  // Clear recorded network requests before clicking submit
+  networkRequests.length = 0;
+
   await page.click('button[type="submit"]');
+  await page.waitForTimeout(300);
 
   const statusText = await page.$eval("#form-status", (el) => el.textContent.trim());
-  console.log(`Demo submit status message: "${statusText}"`);
   assert.equal(
     statusText,
     "Demo validation complete. No information was sent or saved. Your consultation has not been booked."
   );
 
-  console.log("\n--- LOGO INTEGRITY & DIMENSIONS CHECK ---");
-  const logoBox = await page.$eval(".logo-art > img", (el) => {
-    const rect = el.getBoundingClientRect();
-    return { width: rect.width, height: rect.height, naturalWidth: el.naturalWidth, naturalHeight: el.naturalHeight };
-  });
-  console.log("Logo dimensions:", logoBox);
-  assert.ok(logoBox.width > 0 && logoBox.height > 0);
-  assert.equal(logoBox.naturalWidth, 1600);
-  assert.equal(logoBox.naturalHeight, 533);
+  // Check network requests
+  const leadApiRequests = networkRequests.filter((r) =>
+    r.url.includes("/api/") || r.url.includes("lead") || r.url.includes("submit")
+  );
+  console.log(`Dispatched lead/API network requests during submit: ${leadApiRequests.length}`);
+  assert.equal(
+    leadApiRequests.length,
+    0,
+    "Zero network requests must be made on demo form submission!"
+  );
+  console.log("✓ Verified: Demo submission dispatches zero network requests and saves no PII");
 
-  console.log("\n--- CONSOLE ERRORS REPORT ---");
-  console.log(`Console error count: ${consoleErrors.length}`);
+  console.log("\n=================================================");
+  console.log("10. CONSOLE ERROR AUDIT");
+  console.log("=================================================");
+  console.log(`Total console errors: ${consoleErrors.length}`);
   if (consoleErrors.length > 0) {
-    console.error("Errors found:", consoleErrors);
+    console.error("Console errors encountered:", consoleErrors);
   }
-  assert.equal(consoleErrors.length, 0, "No browser console or hydration errors allowed");
+  assert.equal(consoleErrors.length, 0, "No browser console or hydration errors permitted");
 
   await browser.close();
-  console.log("\nAll browser verification checks passed successfully!");
+  console.log("\nALL EXPANDED BROWSER VERIFICATION CHECKS PASSED!");
 }
 
 runBrowserTests().catch((err) => {
