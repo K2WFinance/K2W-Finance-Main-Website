@@ -20,6 +20,22 @@ export interface UtmAttribution {
 }
 
 /**
+ * Safely resolves window.sessionStorage inside a guarded try/catch block.
+ * Protects against environments where merely evaluating `window.sessionStorage`
+ * throws SecurityError or DOMException (e.g. restrictive sandboxes, blocked storage).
+ */
+export function getSafeSessionStorage(): Storage | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+  try {
+    return window.sessionStorage ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Sanitizes an attribution value: trims and enforces max length.
  */
 export function sanitizeValue(raw: string | null | undefined): string | null {
@@ -63,8 +79,10 @@ export function extractAllowlistedParams(
  */
 export function getStoredAttribution(
   allowlist: readonly string[] = APPROVED_UTM_ALLOWLIST,
-  storage: Storage | null = typeof window !== "undefined" ? window.sessionStorage : null
+  storageOverride?: Storage | null
 ): UtmAttribution | null {
+  const storage =
+    storageOverride !== undefined ? storageOverride : getSafeSessionStorage();
   if (!storage || allowlist.length === 0) return null;
 
   try {
@@ -108,8 +126,10 @@ export function getStoredAttribution(
 export function setStoredAttribution(
   attribution: UtmAttribution,
   allowlist: readonly string[] = APPROVED_UTM_ALLOWLIST,
-  storage: Storage | null = typeof window !== "undefined" ? window.sessionStorage : null
+  storageOverride?: Storage | null
 ): boolean {
+  const storage =
+    storageOverride !== undefined ? storageOverride : getSafeSessionStorage();
   if (!storage || !attribution || allowlist.length === 0) return false;
 
   try {
@@ -136,8 +156,10 @@ export function setStoredAttribution(
  * Demo form validation must NEVER invoke this.
  */
 export function clearStoredAttribution(
-  storage: Storage | null = typeof window !== "undefined" ? window.sessionStorage : null
+  storageOverride?: Storage | null
 ): void {
+  const storage =
+    storageOverride !== undefined ? storageOverride : getSafeSessionStorage();
   if (!storage) return;
 
   try {
@@ -149,16 +171,28 @@ export function clearStoredAttribution(
 
 /**
  * Captures landing attribution on page mount.
- * Returns null immediately if collection is disabled.
+ * Returns null immediately if collection is disabled, before accessing storage.
  */
 export function captureLandingAttribution(
   allowlist: readonly string[] = APPROVED_UTM_ALLOWLIST,
-  searchString: string = typeof window !== "undefined" ? window.location.search : "",
-  storage: Storage | null = typeof window !== "undefined" ? window.sessionStorage : null
+  searchStringOverride?: string,
+  storageOverride?: Storage | null
 ): UtmAttribution | null {
-  if (!UTM_COLLECTION_ENABLED || !storage || allowlist.length === 0) {
+  if (!UTM_COLLECTION_ENABLED) {
     return null;
   }
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const storage =
+    storageOverride !== undefined ? storageOverride : getSafeSessionStorage();
+  if (!storage || allowlist.length === 0) {
+    return null;
+  }
+
+  const searchString =
+    searchStringOverride !== undefined ? searchStringOverride : window.location.search;
 
   const liveParams = extractAllowlistedParams(searchString, allowlist);
   if (Object.keys(liveParams).length > 0) {
@@ -172,15 +206,28 @@ export function captureLandingAttribution(
 /**
  * Retrieves attribution for form submission:
  * Live URL values take priority; stored session attribution is used as fallback.
+ * Returns null immediately if collection is disabled, before accessing storage.
  */
 export function getAttributionForSubmission(
   allowlist: readonly string[] = APPROVED_UTM_ALLOWLIST,
-  searchString: string = typeof window !== "undefined" ? window.location.search : "",
-  storage: Storage | null = typeof window !== "undefined" ? window.sessionStorage : null
+  searchStringOverride?: string,
+  storageOverride?: Storage | null
 ): UtmAttribution | null {
-  if (!UTM_COLLECTION_ENABLED || !storage || allowlist.length === 0) {
+  if (!UTM_COLLECTION_ENABLED) {
     return null;
   }
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const storage =
+    storageOverride !== undefined ? storageOverride : getSafeSessionStorage();
+  if (!storage || allowlist.length === 0) {
+    return null;
+  }
+
+  const searchString =
+    searchStringOverride !== undefined ? searchStringOverride : window.location.search;
 
   const liveParams = extractAllowlistedParams(searchString, allowlist);
   if (Object.keys(liveParams).length > 0) {

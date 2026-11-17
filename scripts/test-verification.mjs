@@ -14,6 +14,7 @@ import {
   clearStoredAttribution,
   captureLandingAttribution,
   getAttributionForSubmission,
+  getSafeSessionStorage,
   STORAGE_KEY,
   MAX_PARAM_LENGTH,
   UTM_COLLECTION_ENABLED,
@@ -164,7 +165,7 @@ assert.equal(readCorrupt, null, "Corrupt storage must return null safely without
 assert.equal(corruptStorage.getItem(STORAGE_KEY), null, "Corrupt storage must be cleared");
 console.log("✓ Verified: Malformed JSON handled safely and purged without throwing");
 
-// F. Blocked Storage Test (SecurityError / QuotaExceededError simulation)
+// F. Blocked Storage Method Exceptions Test (SecurityError on getItem/setItem)
 const blockedStorage = {
   getItem: () => {
     throw new Error("SecurityError: The operation is insecure.");
@@ -217,5 +218,77 @@ assert.equal(cleanUrlStorage.getItem(STORAGE_KEY), null, "Clear attribution purg
 console.log("✓ Verified: Stored attribution cleared only upon explicit API success call");
 
 console.log("\n=================================================");
-console.log("ALL UNIT AND INTEGRATION CHECKS PASSED!");
+console.log("3. REGRESSION TESTS: WINDOW.SESSIONSTORAGE ACCESS");
+console.log("=================================================");
+
+// Simulate a browser window environment where accessing `window.sessionStorage` property itself throws SecurityError
+const originalWindow = globalThis.window;
+try {
+  let sessionStoragePropertyAccessCount = 0;
+
+  const mockWindow = {
+    location: { search: "?utm_source=google&utm_campaign=test" },
+  };
+
+  Object.defineProperty(mockWindow, "sessionStorage", {
+    get() {
+      sessionStoragePropertyAccessCount++;
+      throw new Error("SecurityError: Access is denied for this document.");
+    },
+    configurable: true,
+  });
+
+  // Attach mock window to global scope
+  globalThis.window = mockWindow;
+
+  // A. Guarded helper test
+  assert.doesNotThrow(() => {
+    const storage = getSafeSessionStorage();
+    assert.equal(storage, null, "getSafeSessionStorage must return null when property access throws");
+  }, "getSafeSessionStorage must not throw when window.sessionStorage property throws");
+  console.log("✓ Verified: getSafeSessionStorage catches SecurityError on window.sessionStorage access");
+
+  // B. Default invocation test without injecting mock storage argument
+  assert.doesNotThrow(() => {
+    const res = getStoredAttribution(testAllowlist); // No storage argument passed!
+    assert.equal(res, null);
+  }, "getStoredAttribution default invocation must not throw when window.sessionStorage property throws");
+
+  assert.doesNotThrow(() => {
+    const res = setStoredAttribution({ utm_source: "google" }, testAllowlist); // No storage argument passed!
+    assert.equal(res, false);
+  }, "setStoredAttribution default invocation must not throw when window.sessionStorage property throws");
+
+  assert.doesNotThrow(() => {
+    clearStoredAttribution(); // No storage argument passed!
+  }, "clearStoredAttribution default invocation must not throw when window.sessionStorage property throws");
+  console.log("✓ Verified: Default invocations without storage arguments succeed safely under SecurityError");
+
+  // C. Disabled capture zero-storage-access test
+  sessionStoragePropertyAccessCount = 0; // reset spy counter
+
+  const captured = captureLandingAttribution();
+  assert.equal(captured, null, "Disabled capture must return null");
+  assert.equal(
+    sessionStoragePropertyAccessCount,
+    0,
+    "Disabled capture must NOT touch window.sessionStorage at all!"
+  );
+
+  const submissionAtt = getAttributionForSubmission();
+  assert.equal(submissionAtt, null, "Disabled submission attribution must return null");
+  assert.equal(
+    sessionStoragePropertyAccessCount,
+    0,
+    "Disabled submission attribution must NOT touch window.sessionStorage at all!"
+  );
+  console.log("✓ Verified: Disabled capture returns immediately with ZERO window.sessionStorage accesses");
+
+} finally {
+  // Restore original window
+  globalThis.window = originalWindow;
+}
+
+console.log("\n=================================================");
+console.log("ALL UNIT AND REGRESSION CHECKS PASSED!");
 console.log("=================================================");
