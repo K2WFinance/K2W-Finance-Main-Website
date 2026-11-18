@@ -1,17 +1,81 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import Link from "next/link";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ArrowIcon } from "../ui/Icons";
 import { selectInterest, GoalInterest } from "@/lib/interest-events";
 
 export function Solutions() {
+  const containerRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const root = containerRef.current;
+    if (typeof window === "undefined" || !root) return;
+
+    gsap.registerPlugin(ScrollTrigger);
+
+    const mm = gsap.matchMedia();
+
+    mm.add(
+      "(prefers-reduced-motion: no-preference)",
+      () => {
+        gsap.from(".split-heading > *", {
+          y: 20,
+          opacity: 0,
+          stagger: 0.08,
+          duration: 0.6,
+          ease: "power3.out",
+          clearProps: "transform,opacity",
+          scrollTrigger: {
+            trigger: ".split-section",
+            start: "top 86%",
+            once: true,
+          },
+        });
+
+        gsap.from(".solution-list details", {
+          y: 20,
+          opacity: 0,
+          stagger: 0.09,
+          duration: 0.55,
+          ease: "power3.out",
+          clearProps: "transform,opacity",
+          scrollTrigger: {
+            trigger: ".solution-list",
+            start: "top 86%",
+            once: true,
+          },
+        });
+
+        gsap.from(".help-note", {
+          y: 14,
+          opacity: 0,
+          duration: 0.5,
+          ease: "power3.out",
+          clearProps: "transform,opacity",
+          scrollTrigger: {
+            trigger: ".help-note",
+            start: "top 92%",
+            once: true,
+          },
+        });
+      },
+      root
+    );
+
+    return () => {
+      mm.revert();
+    };
+  }, []);
+
   const handlePreselect = (interest: GoalInterest) => {
     selectInterest(interest);
   };
 
   return (
-    <section className="section solutions" id="solutions">
+    <section ref={containerRef} className="section solutions" id="solutions">
       <div className="wrap">
         <div className="split-section">
           <div className="split-heading">

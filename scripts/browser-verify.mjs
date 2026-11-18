@@ -7,20 +7,24 @@ const SCREENSHOTS_DIR = path.resolve("./docs/screenshots");
 fs.mkdirSync(SCREENSHOTS_DIR, { recursive: true });
 
 async function scrollPageToTriggerAllReveals(page) {
-  // Smooth scroll through entire height to trigger all ScrollTriggers
+  // Step through entire page height with instant scroll so smooth-scroll CSS
+  // does not short-circuit ScrollTrigger activation on lower sections.
   await page.evaluate(async () => {
-    const distance = 400;
+    const distance = 350;
     const totalHeight = document.body.scrollHeight;
     let current = 0;
     while (current < totalHeight) {
-      window.scrollBy(0, distance);
       current += distance;
-      await new Promise((r) => setTimeout(r, 60));
+      window.scrollTo({ top: current, behavior: "instant" });
+      await new Promise((r) => setTimeout(r, 80));
     }
-    // Return to top
-    window.scrollTo(0, 0);
+    window.scrollTo({ top: totalHeight, behavior: "instant" });
   });
-  await page.waitForTimeout(400);
+  await page.waitForTimeout(900);
+  await page.evaluate(() => {
+    window.scrollTo({ top: 0, behavior: "instant" });
+  });
+  await page.waitForTimeout(250);
 }
 
 async function runBrowserTests() {
@@ -240,18 +244,72 @@ async function runBrowserTests() {
   console.log("✓ Keyboard trap, Escape key handling, and focus restoration verified");
 
   console.log("\n=================================================");
-  console.log("7. REDUCED MOTION VERIFICATION");
+  console.log("7. SCROLL REVEAL & REDUCED MOTION VERIFICATION");
   console.log("=================================================");
+  const revealSelectors = [
+    ".intro p",
+    ".feature-copy h2",
+    ".feature .calc",
+    "#goals .section-header h2",
+    "#goals .goal-detail",
+    "#solutions .split-heading h2",
+    "#solutions .solution-list details",
+    "#process .section-header h2",
+    "#process .steps article",
+    ".brand-story .story-image",
+    ".brand-story .story-copy h2",
+    "#faqs .split-heading h2",
+    "#faqs details",
+    "#contact .contact-heading h2",
+    "#contact .contact-note",
+    "#contact #lead-form",
+  ];
+
+  // Normal motion: scroll through full page and verify every section settles at opacity 1
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(nextUrl, { waitUntil: "networkidle" });
+  await scrollPageToTriggerAllReveals(page);
+  const settledResults = await page.evaluate((sels) => {
+    return sels.map((sel) => {
+      const els = Array.from(document.querySelectorAll(sel));
+      return {
+        sel,
+        count: els.length,
+        minOpacity: Math.min(...els.map((el) => parseFloat(getComputedStyle(el).opacity))),
+      };
+    });
+  }, revealSelectors);
+  for (const item of settledResults) {
+    assert.ok(item.count > 0, `Reveal target ${item.sel} must exist`);
+    assert.equal(item.minOpacity, 1, `Reveal target ${item.sel} must settle at opacity 1 after scroll`);
+  }
+  console.log("✓ Scroll reveals verified: all 16 section targets settled cleanly at opacity 1");
+
+  // Reduced motion: verify scroll-behavior: auto AND all sections immediately at opacity 1 before scrolling
   const reducedMotionContext = await browser.newContext({
     reducedMotion: "reduce",
   });
   const rmPage = await reducedMotionContext.newPage();
+  await rmPage.setViewportSize({ width: 1440, height: 900 });
   await rmPage.goto(nextUrl, { waitUntil: "networkidle" });
   const htmlScrollBehavior = await rmPage.evaluate(() => {
     return window.getComputedStyle(document.documentElement).scrollBehavior;
   });
   console.log(`Reduced motion scroll-behavior: "${htmlScrollBehavior}"`);
   assert.equal(htmlScrollBehavior, "auto", "Scroll behavior must be auto under reduced motion");
+
+  const rmOpacityResults = await rmPage.evaluate((sels) => {
+    return sels.map((sel) => {
+      const els = Array.from(document.querySelectorAll(sel));
+      return {
+        sel,
+        minOpacity: Math.min(...els.map((el) => parseFloat(getComputedStyle(el).opacity))),
+      };
+    });
+  }, revealSelectors);
+  for (const item of rmOpacityResults) {
+    assert.equal(item.minOpacity, 1, `Under reduced motion, ${item.sel} must be visible immediately`);
+  }
   await reducedMotionContext.close();
   console.log("✓ Reduced-motion handling verified without spatial animations");
 

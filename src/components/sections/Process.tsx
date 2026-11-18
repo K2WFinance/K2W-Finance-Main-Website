@@ -8,31 +8,49 @@ export function Process() {
   const containerRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-    if (mediaQuery.matches) return;
+    const root = containerRef.current;
+    if (typeof window === "undefined" || !root) return;
 
     gsap.registerPlugin(ScrollTrigger);
 
-    const ctx = gsap.context(() => {
-      gsap.from(".steps article", {
-        y: 14,
-        opacity: 0.55,
-        stagger: 0.08,
-        duration: 0.5,
-        ease: "power3.out",
-        clearProps: "transform,opacity",
-        scrollTrigger: {
-          trigger: ".steps",
-          start: "top 85%",
-          once: true,
-        },
-      });
-    }, containerRef);
+    const mm = gsap.matchMedia();
+
+    mm.add(
+      "(prefers-reduced-motion: no-preference)",
+      () => {
+        gsap.from(".section-header > *", {
+          y: 20,
+          opacity: 0,
+          stagger: 0.08,
+          duration: 0.6,
+          ease: "power3.out",
+          clearProps: "transform,opacity",
+          scrollTrigger: {
+            trigger: ".section-header",
+            start: "top 88%",
+            once: true,
+          },
+        });
+
+        gsap.from(".steps article", {
+          y: 22,
+          opacity: 0,
+          stagger: 0.08,
+          duration: 0.55,
+          ease: "power3.out",
+          clearProps: "transform,opacity",
+          scrollTrigger: {
+            trigger: ".steps",
+            start: "top 86%",
+            once: true,
+          },
+        });
+      },
+      root
+    );
 
     return () => {
-      ctx.revert();
+      mm.revert();
     };
   }, []);
 

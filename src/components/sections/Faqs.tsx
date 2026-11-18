@@ -1,10 +1,18 @@
 import React from "react";
+import { ScrollReveal } from "../motion/ScrollReveal";
 
 export function Faqs() {
   return (
     <section className="section faqs" id="faqs">
       <div className="wrap split-section">
-        <div className="split-heading">
+        <ScrollReveal
+          className="split-heading"
+          selector="h2, p"
+          y={20}
+          stagger={0.08}
+          duration={0.6}
+          start="top 86%"
+        >
           <h2>
             Clarity before
             <br />
@@ -14,8 +22,14 @@ export function Faqs() {
             Good questions make for more considered decisions. Start here, then
             discuss the details of your chosen product.
           </p>
-        </div>
-        <div>
+        </ScrollReveal>
+        <ScrollReveal
+          selector="details"
+          y={18}
+          stagger={0.06}
+          duration={0.5}
+          start="top 86%"
+        >
           <details open>
             <summary>Where do I begin if I have several goals?</summary>
             <p>
@@ -72,7 +86,7 @@ export function Faqs() {
               information.
             </p>
           </details>
-        </div>
+        </ScrollReveal>
       </div>
     </section>
   );

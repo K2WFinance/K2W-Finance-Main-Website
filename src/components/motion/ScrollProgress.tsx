@@ -24,7 +24,30 @@ export function ScrollProgress() {
       });
     });
 
+    let active = true;
+    const refresh = () => {
+      if (active) {
+        ScrollTrigger.refresh();
+      }
+    };
+
+    const handleToggle = (event: Event) => {
+      if (
+        event.target instanceof HTMLElement &&
+        event.target.tagName === "DETAILS"
+      ) {
+        refresh();
+      }
+    };
+
+    document.fonts?.ready.then(refresh);
+    window.addEventListener("load", refresh, { once: true });
+    document.addEventListener("toggle", handleToggle, true);
+
     return () => {
+      active = false;
+      window.removeEventListener("load", refresh);
+      document.removeEventListener("toggle", handleToggle, true);
       ctx.revert();
     };
   }, []);

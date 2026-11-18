@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ArrowIcon, CheckIcon } from "../ui/Icons";
 import {
   ALLOWED_INTERESTS,
@@ -26,11 +28,73 @@ export function ContactForm() {
   const [statusMessage, setStatusMessage] = useState("");
   const [errors, setErrors] = useState<FormErrors>({});
 
+  const containerRef = useRef<HTMLElement>(null);
   const nameInputRef = useRef<HTMLInputElement>(null);
   const phoneInputRef = useRef<HTMLInputElement>(null);
   const emailInputRef = useRef<HTMLInputElement>(null);
   const interestSelectRef = useRef<HTMLSelectElement>(null);
   const consentInputRef = useRef<HTMLInputElement>(null);
+
+  // Scroll-reveal animation for Contact section
+  useEffect(() => {
+    const root = containerRef.current;
+    if (typeof window === "undefined" || !root) return;
+
+    gsap.registerPlugin(ScrollTrigger);
+
+    const mm = gsap.matchMedia();
+
+    mm.add(
+      "(prefers-reduced-motion: no-preference)",
+      () => {
+        gsap.from(".contact-heading > *", {
+          y: 20,
+          opacity: 0,
+          stagger: 0.08,
+          duration: 0.6,
+          ease: "power3.out",
+          clearProps: "transform,opacity",
+          scrollTrigger: {
+            trigger: ".contact-heading",
+            start: "top 88%",
+            once: true,
+          },
+        });
+
+        gsap.from(".contact-note", {
+          y: 22,
+          opacity: 0,
+          duration: 0.6,
+          ease: "power3.out",
+          clearProps: "transform,opacity",
+          scrollTrigger: {
+            trigger: ".contact-layout",
+            start: "top 86%",
+            once: true,
+          },
+        });
+
+        gsap.from("#lead-form", {
+          y: 24,
+          opacity: 0,
+          duration: 0.65,
+          delay: 0.08,
+          ease: "power3.out",
+          clearProps: "transform,opacity",
+          scrollTrigger: {
+            trigger: ".contact-layout",
+            start: "top 86%",
+            once: true,
+          },
+        });
+      },
+      root
+    );
+
+    return () => {
+      mm.revert();
+    };
+  }, []);
 
   // Subscribe to external goal / savings-option preselection
   useEffect(() => {
@@ -134,7 +198,7 @@ export function ContactForm() {
   };
 
   return (
-    <section className="contact-section" id="contact">
+    <section ref={containerRef} className="contact-section" id="contact">
       <div className="wrap">
         <div className="contact-heading">
           <h2>

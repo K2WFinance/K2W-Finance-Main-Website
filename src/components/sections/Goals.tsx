@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ArrowIcon, GoalIcon } from "../ui/Icons";
 import { FormattedFinancial } from "../ui/FormattedFinancial";
 import { GOALS_DATA, GOAL_KEYS, GoalKey } from "@/lib/goals-data";
@@ -10,9 +11,71 @@ import { selectInterest } from "@/lib/interest-events";
 
 export function Goals() {
   const [selectedKey, setSelectedKey] = useState<GoalKey>("income");
+  const containerRef = useRef<HTMLElement>(null);
   const detailRef = useRef<HTMLDivElement>(null);
 
   const selectedGoal = GOALS_DATA[selectedKey];
+
+  useEffect(() => {
+    const root = containerRef.current;
+    if (typeof window === "undefined" || !root) return;
+
+    gsap.registerPlugin(ScrollTrigger);
+
+    const mm = gsap.matchMedia();
+
+    mm.add(
+      "(prefers-reduced-motion: no-preference)",
+      () => {
+        gsap.from(".section-header > *", {
+          y: 20,
+          opacity: 0,
+          stagger: 0.08,
+          duration: 0.6,
+          ease: "power3.out",
+          clearProps: "transform,opacity",
+          scrollTrigger: {
+            trigger: ".section-header",
+            start: "top 88%",
+            once: true,
+          },
+        });
+
+        gsap.from(".goal-nav .goal", {
+          y: 16,
+          opacity: 0,
+          stagger: 0.06,
+          duration: 0.5,
+          ease: "power3.out",
+          clearProps: "transform,opacity",
+          scrollTrigger: {
+            trigger: ".goal-layout",
+            start: "top 86%",
+            once: true,
+          },
+        });
+
+        gsap.from(".goal-detail", {
+          y: 22,
+          opacity: 0,
+          duration: 0.6,
+          delay: 0.1,
+          ease: "power3.out",
+          clearProps: "transform,opacity",
+          scrollTrigger: {
+            trigger: ".goal-layout",
+            start: "top 86%",
+            once: true,
+          },
+        });
+      },
+      root
+    );
+
+    return () => {
+      mm.revert();
+    };
+  }, []);
 
   const handleGoalSelect = (key: GoalKey) => {
     setSelectedKey(key);
@@ -28,6 +91,9 @@ export function Goals() {
           { opacity: 1, duration: 0.16, overwrite: true, clearProps: "opacity" }
         );
       }
+      requestAnimationFrame(() => {
+        ScrollTrigger.refresh();
+      });
     }
   };
 
@@ -36,7 +102,7 @@ export function Goals() {
   };
 
   return (
-    <section className="section" id="goals">
+    <section ref={containerRef} className="section" id="goals">
       <div className="wrap">
         <div className="section-header">
           <h2>

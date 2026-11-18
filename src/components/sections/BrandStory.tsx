@@ -11,30 +11,50 @@ export function BrandStory() {
   const containerRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-    if (mediaQuery.matches) return;
+    const root = containerRef.current;
+    if (typeof window === "undefined" || !root) return;
 
     gsap.registerPlugin(ScrollTrigger);
 
-    const ctx = gsap.context(() => {
-      gsap.from(".story-image", {
-        clipPath: "inset(0 0 12% 0)",
-        opacity: 0.7,
-        duration: 0.65,
-        ease: "power3.out",
-        clearProps: "clipPath,opacity",
-        scrollTrigger: {
-          trigger: ".brand-story",
-          start: "top 80%",
-          once: true,
-        },
-      });
-    }, containerRef);
+    const mm = gsap.matchMedia();
+
+    mm.add(
+      "(prefers-reduced-motion: no-preference)",
+      () => {
+        gsap.from(".story-image", {
+          clipPath: "inset(0 0 12% 0)",
+          y: 18,
+          opacity: 0,
+          duration: 0.7,
+          ease: "power3.out",
+          clearProps: "clipPath,transform,opacity",
+          scrollTrigger: {
+            trigger: root,
+            start: "top 84%",
+            once: true,
+          },
+        });
+
+        gsap.from(".story-copy > *", {
+          y: 20,
+          opacity: 0,
+          stagger: 0.08,
+          duration: 0.6,
+          delay: 0.08,
+          ease: "power3.out",
+          clearProps: "transform,opacity",
+          scrollTrigger: {
+            trigger: root,
+            start: "top 84%",
+            once: true,
+          },
+        });
+      },
+      root
+    );
 
     return () => {
-      ctx.revert();
+      mm.revert();
     };
   }, []);
 

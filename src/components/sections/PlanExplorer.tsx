@@ -40,34 +40,54 @@ export function PlanExplorer() {
     tenure
   );
 
-  // GSAP animation
+  // GSAP scroll-reveal animation
   useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const reducedMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)"
-    ).matches;
-    if (reducedMotion) return;
+    const root = containerRef.current;
+    if (typeof window === "undefined" || !root) return;
 
     gsap.registerPlugin(ScrollTrigger);
 
-    const ctx = gsap.context(() => {
-      gsap.from(".feature .calc", {
-        y: 20,
-        opacity: 0.65,
-        duration: 0.6,
-        ease: "power3.out",
-        clearProps: "transform,opacity",
-        scrollTrigger: {
-          trigger: ".feature",
-          start: "top 75%",
-          once: true,
-        },
-      });
-    }, containerRef);
+    const mm = gsap.matchMedia();
+
+    mm.add(
+      "(prefers-reduced-motion: no-preference)",
+      () => {
+        gsap.from(
+          ".feature-copy h2, .feature-copy > p, .feature-copy .text-link, .feature-points > div",
+          {
+            y: 20,
+            opacity: 0,
+            stagger: 0.07,
+            duration: 0.6,
+            ease: "power3.out",
+            clearProps: "transform,opacity",
+            scrollTrigger: {
+              trigger: root,
+              start: "top 84%",
+              once: true,
+            },
+          }
+        );
+
+        gsap.from(".calc", {
+          y: 24,
+          opacity: 0,
+          duration: 0.65,
+          delay: 0.08,
+          ease: "power3.out",
+          clearProps: "transform,opacity",
+          scrollTrigger: {
+            trigger: root,
+            start: "top 80%",
+            once: true,
+          },
+        });
+      },
+      root
+    );
 
     return () => {
-      ctx.revert();
+      mm.revert();
     };
   }, []);
 
