@@ -64,7 +64,7 @@ export function BrandStory() {
         <div className="story-image">
           <Image
             src="/assets/family-moment.webp"
-            alt="A mother spending time with her children and a tablet at home"
+            alt="An Indian mother spending time with her children and a tablet at home"
             width={1600}
             height={1067}
             loading="lazy"
