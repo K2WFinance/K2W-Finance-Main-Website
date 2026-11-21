@@ -63,7 +63,7 @@ export function BrandStory() {
       <div className="wrap story-grid">
         <div className="story-image">
           <Image
-            src="/assets/family-moment.webp"
+            src="/assets/family-moment-v2.webp"
             alt="An Indian mother spending time with her children and a tablet at home"
             width={1600}
             height={1067}

@@ -1754,7 +1754,7 @@ form > .btn {
   }
   .story-image img {
     aspect-ratio: 1.5;
-    object-position: 65% 40%;
+    object-position: center 30%;
   }
   .story-copy {
     text-align: center;
@@ -2064,7 +2064,7 @@ form > .btn {
   }
   .story-image img {
     aspect-ratio: 1.1;
-    object-position: 65% center;
+    object-position: center 30%;
   }
   .story-copy > p {
     font-size: 15px;
