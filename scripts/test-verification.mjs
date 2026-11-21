@@ -186,9 +186,13 @@ console.log("2. UTM ATTRIBUTION VERIFICATION");
 console.log("=================================================");
 
 // A. Production Flag State
-assert.equal(UTM_COLLECTION_ENABLED, false, "Active UTM collection must remain disabled");
-assert.deepEqual(APPROVED_UTM_ALLOWLIST, [], "K2WFINANCE allowlist must be empty until approved");
-console.log("✓ Verified: Active UTM collection is DISABLED pending client approval");
+assert.equal(UTM_COLLECTION_ENABLED, true, "Active UTM collection is enabled with approved allowlist");
+assert.deepEqual(
+  APPROVED_UTM_ALLOWLIST,
+  ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term", "gclid", "fbclid"],
+  "Approved 7-field UTM allowlist must match"
+);
+console.log("✓ Verified: Active UTM collection is ENABLED with approved 7-field allowlist");
 
 // B. Value Sanitization
 assert.equal(sanitizeValue("   google   "), "google");
@@ -287,10 +291,19 @@ console.log("✓ Verified: Clean-URL fallback preserves stored session attributi
 assert.equal(cleanUrlStorage.getItem(STORAGE_KEY) !== null, true);
 console.log("✓ Verified: Demo validation preserves attribution in storage");
 
-// I. Verified API Success Clearance Test
-clearStoredAttribution(cleanUrlStorage);
-assert.equal(cleanUrlStorage.getItem(STORAGE_KEY), null, "Clear attribution purges stored key");
-console.log("✓ Verified: Stored attribution cleared only upon explicit API success call");
+// I. Verified API Success Clearance Test & In-Flight Preservation
+// 1. If stored attribution matches consumed snapshot, it is cleared
+clearStoredAttribution(submissionAttribution, cleanUrlStorage);
+assert.equal(cleanUrlStorage.getItem(STORAGE_KEY), null, "Clear attribution purges matching stored key");
+
+// 2. If a newer campaign was stored while request was in-flight, it is preserved
+setStoredAttribution({ utm_source: "bing", utm_campaign: "autumn_2026" }, testAllowlist, cleanUrlStorage);
+clearStoredAttribution({ utm_source: "google", utm_campaign: "summer_2026" }, cleanUrlStorage);
+const preserved = getStoredAttribution(testAllowlist, cleanUrlStorage);
+assert.deepEqual(preserved, { utm_source: "bing", utm_campaign: "autumn_2026" }, "Newer in-flight attribution must be preserved");
+clearStoredAttribution(preserved, cleanUrlStorage);
+assert.equal(cleanUrlStorage.getItem(STORAGE_KEY), null);
+console.log("✓ Verified: Stored attribution cleared upon verified API success and preserves newer in-flight campaigns");
 
 console.log("\n=================================================");
 console.log("3. REGRESSION TESTS: WINDOW.SESSIONSTORAGE ACCESS");
@@ -339,25 +352,25 @@ try {
   }, "clearStoredAttribution default invocation must not throw when window.sessionStorage property throws");
   console.log("✓ Verified: Default invocations without storage arguments succeed safely under SecurityError");
 
-  // C. Disabled capture zero-storage-access test
-  sessionStoragePropertyAccessCount = 0; // reset spy counter
+  // C. Resilient live URL capture under SecurityError
+  assert.doesNotThrow(() => {
+    const captured = captureLandingAttribution(testAllowlist);
+    assert.deepEqual(
+      captured,
+      { utm_source: "google", utm_campaign: "test" },
+      "Must safely extract live URL params even when sessionStorage throws SecurityError"
+    );
+  }, "captureLandingAttribution must not throw when window.sessionStorage property throws");
 
-  const captured = captureLandingAttribution();
-  assert.equal(captured, null, "Disabled capture must return null");
-  assert.equal(
-    sessionStoragePropertyAccessCount,
-    0,
-    "Disabled capture must NOT touch window.sessionStorage at all!"
-  );
-
-  const submissionAtt = getAttributionForSubmission();
-  assert.equal(submissionAtt, null, "Disabled submission attribution must return null");
-  assert.equal(
-    sessionStoragePropertyAccessCount,
-    0,
-    "Disabled submission attribution must NOT touch window.sessionStorage at all!"
-  );
-  console.log("✓ Verified: Disabled capture returns immediately with ZERO window.sessionStorage accesses");
+  assert.doesNotThrow(() => {
+    const submissionAtt = getAttributionForSubmission(testAllowlist);
+    assert.deepEqual(
+      submissionAtt,
+      { utm_source: "google", utm_campaign: "test" },
+      "Must safely return live URL params for submission even when sessionStorage throws SecurityError"
+    );
+  }, "getAttributionForSubmission must not throw when window.sessionStorage property throws");
+  console.log("✓ Verified: Live URL capture succeeds safely even under sessionStorage SecurityError");
 
 } finally {
   // Restore original window

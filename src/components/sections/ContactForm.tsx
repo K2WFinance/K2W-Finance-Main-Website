@@ -9,6 +9,12 @@ import {
   GoalInterest,
   subscribeToInterest,
 } from "@/lib/interest-events";
+import { getAttributionForSubmission } from "@/lib/utm";
+import {
+  createSubmissionSnapshot,
+  submitLeadSnapshot,
+  SubmissionSnapshot,
+} from "@/lib/api-client";
 
 interface FormErrors {
   name?: string;
@@ -27,6 +33,10 @@ export function ContactForm() {
   const [honeypot, setHoneypot] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
   const [errors, setErrors] = useState<FormErrors>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+
+  const activeSnapshotRef = useRef<SubmissionSnapshot | null>(null);
 
   const containerRef = useRef<HTMLElement>(null);
   const nameInputRef = useRef<HTMLInputElement>(null);
@@ -143,14 +153,14 @@ export function ContactForm() {
     if (field === "consent") {
       const v = typeof val === "boolean" ? val : consent;
       if (!v) {
-        return "Please acknowledge that this is a demo.";
+        return "Please agree to be contacted regarding your consultation.";
       }
     }
 
     return "";
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatusMessage("");
 
@@ -191,10 +201,45 @@ export function ContactForm() {
       return;
     }
 
-    // Success (demo mode only - no API call, no PII stored)
-    setStatusMessage(
-      "Demo validation complete. No information was sent or saved. Your consultation has not been booked."
-    );
+    // Capture or freeze submission snapshot with idempotency key
+    const currentAttribution = getAttributionForSubmission() || undefined;
+
+    // If existing snapshot matches current form values, reuse it (retry safety)
+    let snapshot = activeSnapshotRef.current;
+    if (
+      !snapshot ||
+      snapshot.payload.name !== name.trim() ||
+      snapshot.payload.phone !== phone.trim() ||
+      snapshot.payload.email !== email.trim() ||
+      snapshot.payload.interest !== interest ||
+      snapshot.payload.consent !== consent
+    ) {
+      snapshot = createSubmissionSnapshot({
+        name: name.trim(),
+        phone: phone.trim(),
+        email: email.trim(),
+        interest: interest as string,
+        consent,
+        website: honeypot,
+        attribution: currentAttribution,
+      });
+      activeSnapshotRef.current = snapshot;
+    }
+
+    setIsSubmitting(true);
+    const result = await submitLeadSnapshot(snapshot);
+    setIsSubmitting(false);
+
+    if (result.success) {
+      setIsSubmitted(true);
+      setStatusMessage(result.message);
+      activeSnapshotRef.current = null;
+    } else {
+      if (result.fields) {
+        setErrors((prev) => ({ ...prev, ...result.fields }));
+      }
+      setStatusMessage(result.message);
+    }
   };
 
   return (
@@ -234,8 +279,7 @@ export function ContactForm() {
               </li>
             </ul>
             <p className="demo">
-              Design preview. Consultation booking is not connected. Please use
-              sample details in the demo form.
+              Submit your details to request a consultation.
             </p>
           </div>
 
@@ -257,6 +301,7 @@ export function ContactForm() {
                   aria-describedby="name-error"
                   onChange={(e) => {
                     setName(e.target.value);
+                    activeSnapshotRef.current = null;
                     if (errors.name) {
                       setErrors((prev) => ({
                         ...prev,
@@ -287,6 +332,7 @@ export function ContactForm() {
                   aria-describedby="phone-error"
                   onChange={(e) => {
                     setPhone(e.target.value);
+                    activeSnapshotRef.current = null;
                     if (errors.phone) {
                       setErrors((prev) => ({
                         ...prev,
@@ -318,6 +364,7 @@ export function ContactForm() {
                   aria-describedby="email-error"
                   onChange={(e) => {
                     setEmail(e.target.value);
+                    activeSnapshotRef.current = null;
                     if (errors.email) {
                       setErrors((prev) => ({
                         ...prev,
@@ -348,6 +395,7 @@ export function ContactForm() {
                   onChange={(e) => {
                     const val = e.target.value as GoalInterest | "";
                     setInterest(val);
+                    activeSnapshotRef.current = null;
                     if (errors.interest) {
                       setErrors((prev) => ({
                         ...prev,
@@ -395,6 +443,7 @@ export function ContactForm() {
                 aria-describedby="consent-error"
                 onChange={(e) => {
                   setConsent(e.target.checked);
+                  activeSnapshotRef.current = null;
                   if (errors.consent) {
                     setErrors((prev) => ({
                       ...prev,
@@ -406,16 +455,28 @@ export function ContactForm() {
                 }}
               />
               <span>
-                I understand this is a demo form and no information will be sent
-                or saved. *
+                I agree to be contacted by K2WFINANCE regarding my consultation
+                request. *
               </span>
             </label>
             <span className="error" id="consent-error">
               {errors.consent}
             </span>
 
-            <button type="submit" className="btn primary">
-              Preview my request <ArrowIcon />
+            <button
+              type="submit"
+              className="btn primary"
+              disabled={isSubmitting || isSubmitted}
+            >
+              {isSubmitting ? (
+                "Submitting request..."
+              ) : isSubmitted ? (
+                "Request submitted"
+              ) : (
+                <>
+                  Request consultation <ArrowIcon />
+                </>
+              )}
             </button>
 
             {statusMessage && (
@@ -425,8 +486,7 @@ export function ContactForm() {
             )}
 
             <p className="demo">
-              UI demo only. No information is sent or saved. Please use sample
-              details.
+              Submit your details to request a consultation.
             </p>
           </form>
         </div>

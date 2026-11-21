@@ -1,19 +1,26 @@
 /**
  * Isolated K2WFINANCE UTM attribution utility.
  *
- * Current Status: Active collection is DISABLED until K2WFINANCE approves an explicit allowlist.
+ * Current Status: Active collection is ENABLED with the approved 7-field allowlist.
  * No advertising cookies or PII are captured or stored.
  */
 
 export const STORAGE_KEY = "k2wfinance_attribution_v1";
 export const MAX_PARAM_LENGTH = 200;
 
-// Explicit flag: active capture is disabled pending client confirmation
-export const UTM_COLLECTION_ENABLED = false;
+// Active capture is ENABLED per approved specification
+export const UTM_COLLECTION_ENABLED = true;
 
-// Tentative allowlist structure for future client approval.
-// Empty until explicitly approved by the K2WFINANCE project lead.
-export const APPROVED_UTM_ALLOWLIST: readonly string[] = [] as const;
+// Approved URL tracking allowlist (7 parameters)
+export const APPROVED_UTM_ALLOWLIST: readonly string[] = [
+  "utm_source",
+  "utm_medium",
+  "utm_campaign",
+  "utm_content",
+  "utm_term",
+  "gclid",
+  "fbclid",
+] as const;
 
 export interface UtmAttribution {
   [key: string]: string;
@@ -152,10 +159,13 @@ export function setStoredAttribution(
 }
 
 /**
- * Clears stored attribution after verified real API success only.
- * Demo form validation must NEVER invoke this.
+ * Clears stored attribution after verified real API success.
+ * If a consumed attribution snapshot is provided, only clears storage if
+ * stored content matches that snapshot, protecting any newer campaign captured
+ * while the request was in flight.
  */
 export function clearStoredAttribution(
+  consumedSnapshot?: UtmAttribution | null,
   storageOverride?: Storage | null
 ): void {
   const storage =
@@ -163,6 +173,26 @@ export function clearStoredAttribution(
   if (!storage) return;
 
   try {
+    if (consumedSnapshot && Object.keys(consumedSnapshot).length > 0) {
+      const currentRaw = storage.getItem(STORAGE_KEY);
+      if (currentRaw) {
+        try {
+          const currentParsed = JSON.parse(currentRaw);
+          // If current storage differs from what was sent, do not erase newer campaign
+          const isIdentical =
+            Object.keys(currentParsed).length === Object.keys(consumedSnapshot).length &&
+            Object.keys(consumedSnapshot).every(
+              (k) => currentParsed[k] === consumedSnapshot[k]
+            );
+          if (!isIdentical) {
+            return;
+          }
+        } catch {
+          // If current is corrupted, clear safely below
+        }
+      }
+    }
+
     storage.removeItem(STORAGE_KEY);
   } catch {
     // Ignore storage failure
@@ -171,7 +201,7 @@ export function clearStoredAttribution(
 
 /**
  * Captures landing attribution on page mount.
- * Returns null immediately if collection is disabled, before accessing storage.
+ * When storage fails or is blocked, valid live URL parameters remain usable.
  */
 export function captureLandingAttribution(
   allowlist: readonly string[] = APPROVED_UTM_ALLOWLIST,
@@ -185,28 +215,32 @@ export function captureLandingAttribution(
     return null;
   }
 
-  const storage =
-    storageOverride !== undefined ? storageOverride : getSafeSessionStorage();
-  if (!storage || allowlist.length === 0) {
-    return null;
-  }
-
   const searchString =
     searchStringOverride !== undefined ? searchStringOverride : window.location.search;
 
   const liveParams = extractAllowlistedParams(searchString, allowlist);
+
+  const storage =
+    storageOverride !== undefined ? storageOverride : getSafeSessionStorage();
+
   if (Object.keys(liveParams).length > 0) {
-    setStoredAttribution(liveParams, allowlist, storage);
+    if (storage) {
+      setStoredAttribution(liveParams, allowlist, storage);
+    }
     return liveParams;
   }
 
-  return getStoredAttribution(allowlist, storage);
+  if (storage) {
+    return getStoredAttribution(allowlist, storage);
+  }
+
+  return null;
 }
 
 /**
  * Retrieves attribution for form submission:
  * Live URL values take priority; stored session attribution is used as fallback.
- * Returns null immediately if collection is disabled, before accessing storage.
+ * If storage is blocked, live URL params are still extracted safely.
  */
 export function getAttributionForSubmission(
   allowlist: readonly string[] = APPROVED_UTM_ALLOWLIST,
@@ -220,12 +254,6 @@ export function getAttributionForSubmission(
     return null;
   }
 
-  const storage =
-    storageOverride !== undefined ? storageOverride : getSafeSessionStorage();
-  if (!storage || allowlist.length === 0) {
-    return null;
-  }
-
   const searchString =
     searchStringOverride !== undefined ? searchStringOverride : window.location.search;
 
@@ -234,5 +262,12 @@ export function getAttributionForSubmission(
     return liveParams;
   }
 
-  return getStoredAttribution(allowlist, storage);
+  const storage =
+    storageOverride !== undefined ? storageOverride : getSafeSessionStorage();
+
+  if (storage) {
+    return getStoredAttribution(allowlist, storage);
+  }
+
+  return null;
 }
