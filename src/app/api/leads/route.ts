@@ -37,26 +37,52 @@ function isTrustedOrigin(req: NextRequest): boolean {
     }
   }
 
-  // Production check against confirmed server-configured origin
-  const allowedServerOrigin =
-    process.env.APP_URL ||
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null);
-
-  if (!allowedServerOrigin) {
-    // If running in development without APP_URL, allow localhost
-    if (process.env.NODE_ENV !== "production") return true;
-    return false;
-  }
-
   if (!origin) return false;
 
+  let requestOrigin: string;
   try {
-    const requestOrigin = new URL(origin).origin;
-    const configuredOrigin = new URL(allowedServerOrigin).origin;
-    return requestOrigin === configuredOrigin;
+    requestOrigin = new URL(origin).origin;
   } catch {
     return false;
   }
+
+  // 1. Same-origin verification against current request deployment host
+  const host = req.headers.get("x-forwarded-host") || req.headers.get("host");
+  const proto = req.headers.get("x-forwarded-proto") || "https";
+  if (host) {
+    const deploymentOrigin = `${proto}://${host}`;
+    if (requestOrigin === deploymentOrigin) {
+      return true;
+    }
+  }
+
+  if (req.nextUrl && req.nextUrl.origin) {
+    if (requestOrigin === req.nextUrl.origin) {
+      return true;
+    }
+  }
+
+  // 2. Explicit server-configured origins (APP_URL or Vercel system domains)
+  const allowedOrigins: string[] = [];
+
+  if (process.env.APP_URL) {
+    try {
+      allowedOrigins.push(new URL(process.env.APP_URL).origin);
+    } catch {
+      // ignore invalid APP_URL format
+    }
+  }
+  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
+    allowedOrigins.push(`https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`);
+  }
+  if (process.env.VERCEL_URL) {
+    allowedOrigins.push(`https://${process.env.VERCEL_URL}`);
+  }
+  if (process.env.VERCEL_BRANCH_URL) {
+    allowedOrigins.push(`https://${process.env.VERCEL_BRANCH_URL}`);
+  }
+
+  return allowedOrigins.includes(requestOrigin);
 }
 
 export async function POST(req: NextRequest) {
