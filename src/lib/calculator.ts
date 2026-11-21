@@ -23,7 +23,7 @@ export interface CalculatorConfig {
 
 export const CALCULATOR_CONFIGS: Record<CalculatorMode, CalculatorConfig> = {
   growth: {
-    label: "One-time savings",
+    label: "Fixed deposit",
     amountLabel: "Starting amount",
     minAmount: 10000,
     maxAmount: 5000000,
@@ -44,7 +44,7 @@ export const CALCULATOR_CONFIGS: Record<CalculatorMode, CalculatorConfig> = {
       "Illustration only. Annual compounding; before taxes and charges. Rates are based on product terms or your assumption, not a guaranteed return.",
   },
   monthly: {
-    label: "Monthly savings",
+    label: "Recurring deposit",
     amountLabel: "Monthly contribution",
     minAmount: 500,
     maxAmount: 100000,

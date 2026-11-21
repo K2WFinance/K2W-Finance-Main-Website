@@ -44,7 +44,7 @@ export const GOALS_DATA: Record<GoalKey, GoalItem> = {
   },
   business: {
     key: "business",
-    navLabel: "Start your own business",
+    navLabel: "Start Your Own Business",
     horizon: "ENTREPRENEURSHIP & RUNWAY",
     title: "Start your own business. Turn savings into opportunity.",
     copy: "Turn your savings into an income-generating opportunity. Build the initial seed capital and financial cushion you need before taking the leap.",
@@ -70,7 +70,7 @@ export const GOALS_DATA: Record<GoalKey, GoalItem> = {
   },
   emergency: {
     key: "emergency",
-    navLabel: "Build an emergency fund",
+    navLabel: "Build an Emergency Fund",
     horizon: "LIQUIDITY & SAFETY CUSHION",
     title: "Build an emergency fund. Ready for unexpected costs.",
     copy: "Keep money aside for unexpected expenses. Build 3–6 months of essential living expenses in safe, accessible deposit structures.",
@@ -96,7 +96,7 @@ export const GOALS_DATA: Record<GoalKey, GoalItem> = {
   },
   home: {
     key: "home",
-    navLabel: "Save for your dream home",
+    navLabel: "Save for Your Dream Home",
     horizon: "YOUR NEXT 3–5 YEARS",
     title: "Save for your dream home. Turn vision into reality.",
     copy: "Turn your biggest dream into a financial goal. Plan your down payment, registry costs and initial furnishing deliberately over time.",
@@ -109,10 +109,10 @@ export const GOALS_DATA: Record<GoalKey, GoalItem> = {
   },
   family: {
     key: "family",
-    navLabel: "Secure family’s future",
+    navLabel: "Secure Your Family's Future",
     horizon: "FAMILY MILESTONES",
-    title: "Secure your family’s future. Prepare for every milestone.",
-    copy: "Prepare for children’s education, weddings and important family transitions with disciplined, compounding savings.",
+    title: "Secure your family's future. Prepare for every milestone.",
+    copy: "Prepare for children's education and important milestones with disciplined, compounding savings.",
     kicker: "EXAMPLE MILESTONE TARGET",
     number: "₹8 lakh",
     unit: "long-term family security fund",
@@ -135,7 +135,7 @@ export const GOALS_DATA: Record<GoalKey, GoalItem> = {
   },
   dreams: {
     key: "dreams",
-    navLabel: "Fulfil your dreams",
+    navLabel: "Fulfil Your Dreams",
     horizon: "TRAVEL & LIFE EXPERIENCES",
     title: "Fulfil your dreams. Plan for travel and experiences.",
     copy: "Plan for travel, experiences and personal milestones. Give your passions, vehicle upgrades and adventures a dedicated fund without guilt.",
@@ -202,14 +202,9 @@ export const GOALS_DATA: Record<GoalKey, GoalItem> = {
 };
 
 export const GOAL_KEYS: readonly GoalKey[] = [
-  "special_days",
+  "dreams",
   "business",
-  "loans",
   "emergency",
-  "education",
   "home",
   "family",
-  "wealth",
-  "dreams",
-  "peace",
 ] as const;

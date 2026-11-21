@@ -166,20 +166,34 @@ async function runBrowserTests() {
   console.log(`Income default result: ${incomeResult} (expected: ₹8,542 for ₹10L @ 10.25% 3yr)`);
   assert.equal(incomeResult, "₹8,542");
 
+  // Test direct keyboard entry into amount, rate, and tenure input boxes
+  console.log("\n--- Testing Direct Input Entry (Enter Value Option) ---");
+  await page.click('button[data-mode="growth"]');
+  await page.fill("#amount-input", "500000");
+  await page.evaluate(() => document.getElementById("amount-input").dispatchEvent(new Event("blur")));
+  const typedAmountSlider = await page.$eval("#amount", (el) => el.value);
+  assert.equal(typedAmountSlider, "500000", "Slider must sync to typed amount");
+
+  await page.fill("#rate-input", "12");
+  await page.evaluate(() => document.getElementById("rate-input").dispatchEvent(new Event("blur")));
+  const typedRateSlider = await page.$eval("#rate", (el) => el.value);
+  assert.equal(typedRateSlider, "12", "Slider must sync to typed rate");
+
+  await page.fill("#tenure-input", "5");
+  await page.evaluate(() => document.getElementById("tenure-input").dispatchEvent(new Event("blur")));
+  const typedTenureSlider = await page.$eval("#tenure", (el) => el.value);
+  assert.equal(typedTenureSlider, "5", "Slider must sync to typed tenure");
+  console.log("✓ Direct input typing verified: sliders and values sync bidirectionally");
+
   console.log("\n=================================================");
-  console.log("3. ALL TEN GOAL CTAS & PRESELECTION VERIFICATION");
+  console.log("3. ALL FIVE APPROVED GOAL CTAS & PRESELECTION");
   console.log("=================================================");
   const goalTests = [
-    { key: "special_days", expectedInterest: "Gifts on special days", expectedTitle: "Buy gifts on special days. Celebrate traditions." },
-    { key: "business", expectedInterest: "Start your own business", expectedTitle: "Start your own business. Turn savings into opportunity." },
-    { key: "loans", expectedInterest: "Pay off your loans", expectedTitle: "Pay off your loans. Free up your future income." },
-    { key: "emergency", expectedInterest: "Emergency fund", expectedTitle: "Build an emergency fund. Ready for unexpected costs." },
-    { key: "education", expectedInterest: "Education & family", expectedTitle: "Invest in education. Build skills and opportunities." },
-    { key: "home", expectedInterest: "Your own home", expectedTitle: "Save for your dream home. Turn vision into reality." },
-    { key: "family", expectedInterest: "Education & family", expectedTitle: "Secure your family’s future. Prepare for every milestone." },
-    { key: "wealth", expectedInterest: "Grow your wealth", expectedTitle: "Grow your wealth. Disciplined long-term compounding." },
     { key: "dreams", expectedInterest: "Travel & personal dreams", expectedTitle: "Fulfil your dreams. Plan for travel and experiences." },
-    { key: "peace", expectedInterest: "Monthly income plans", expectedTitle: "Enjoy peace of mind. Build security and confidence." },
+    { key: "business", expectedInterest: "Start your own business", expectedTitle: "Start your own business. Turn savings into opportunity." },
+    { key: "emergency", expectedInterest: "Emergency fund", expectedTitle: "Build an emergency fund. Ready for unexpected costs." },
+    { key: "home", expectedInterest: "Your own home", expectedTitle: "Save for your dream home. Turn vision into reality." },
+    { key: "family", expectedInterest: "Education & family", expectedTitle: "Secure your family's future. Prepare for every milestone." },
   ];
 
   for (const g of goalTests) {
@@ -196,7 +210,7 @@ async function runBrowserTests() {
     console.log(`Goal "${g.key}" CTA -> Form Interest: "${interestVal}" (matches expected: "${g.expectedInterest}")`);
     assert.equal(interestVal, g.expectedInterest);
   }
-  console.log("✓ All 10 goal CTAs successfully verified and preselect into ContactForm");
+  console.log("✓ All 5 approved goal CTAs successfully verified and preselect into ContactForm");
 
   console.log("\n=================================================");
   console.log("4. ALL THREE SAVINGS-OPTION CTAS VERIFICATION");
