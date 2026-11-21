@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import {
   calculateValues,
   CALCULATOR_CONFIGS,
+  getProductRateForTenure,
   formatIndianCurrency,
   formatRate,
   formatTenure,
@@ -25,7 +26,7 @@ console.log("=================================================");
 console.log("1. CALCULATOR VERIFICATION (USING PRODUCTION CODE)");
 console.log("=================================================");
 
-// A. Prototype Defaults Verification
+// A. Product Schedule Defaults Verification
 const growthConfig = CALCULATOR_CONFIGS.growth;
 const growthDefault = calculateValues(
   "growth",
@@ -33,10 +34,12 @@ const growthDefault = calculateValues(
   growthConfig.defaultRate,
   growthConfig.defaultTenure
 );
-console.log(`Growth default: ${growthDefault.formattedResult} (Invested: ${growthDefault.formattedInvested}, Growth: ${growthDefault.formattedGrowth})`);
-assert.equal(growthDefault.formattedResult, "₹14,69,328", "Growth default must be ₹14,69,328");
-assert.equal(growthDefault.formattedInvested, "₹10,00,000");
-assert.equal(growthDefault.formattedGrowth, "₹4,69,328");
+console.log(
+  `Growth default: ${growthDefault.formattedResult} (Invested: ${growthDefault.formattedInvested}, Growth: ${growthDefault.formattedGrowth})`
+);
+assert.equal(growthDefault.formattedResult, "₹1,37,689", "Growth default for ₹1L @ 11.25% 3yr must be ₹1,37,689");
+assert.equal(growthDefault.formattedInvested, "₹1,00,000");
+assert.equal(growthDefault.formattedGrowth, "₹37,689");
 
 const monthlyConfig = CALCULATOR_CONFIGS.monthly;
 const monthlyDefault = calculateValues(
@@ -45,10 +48,12 @@ const monthlyDefault = calculateValues(
   monthlyConfig.defaultRate,
   monthlyConfig.defaultTenure
 );
-console.log(`Monthly default: ${monthlyDefault.formattedResult} (Invested: ${monthlyDefault.formattedInvested}, Growth: ${monthlyDefault.formattedGrowth})`);
-assert.equal(monthlyDefault.formattedResult, "₹7,34,769", "Monthly default must be ₹7,34,769");
-assert.equal(monthlyDefault.formattedInvested, "₹6,00,000");
-assert.equal(monthlyDefault.formattedGrowth, "₹1,34,769");
+console.log(
+  `Monthly default: ${monthlyDefault.formattedResult} (Invested: ${monthlyDefault.formattedInvested}, Growth: ${monthlyDefault.formattedGrowth})`
+);
+assert.equal(monthlyDefault.formattedResult, "₹2,10,133", "Monthly default for ₹5k @ 10.25% 3yr must be ₹2,10,133");
+assert.equal(monthlyDefault.formattedInvested, "₹1,80,000");
+assert.equal(monthlyDefault.formattedGrowth, "₹30,133");
 
 const incomeConfig = CALCULATOR_CONFIGS.income;
 const incomeDefault = calculateValues(
@@ -58,10 +63,83 @@ const incomeDefault = calculateValues(
   incomeConfig.defaultTenure
 );
 console.log(`Income default: ${incomeDefault.formattedResult} monthly payout`);
-assert.equal(incomeDefault.formattedResult, "₹6,667", "Income default must be ₹6,667");
+assert.equal(incomeDefault.formattedResult, "₹8,542", "Income default for ₹10L @ 10.25% 3yr must be ₹8,542");
 assert.equal(incomeDefault.formattedInvested, "₹10,00,000");
 
-// B. Zero-Rate Tests
+// B. Complete Client Schedule Table Verifications
+console.log("\n--- B. MIP Schedule Table Verification ---");
+const mipTable = [
+  { amount: 20000, expected: [142, 163, 171, 179, 179] },
+  { amount: 50000, expected: [354, 406, 427, 448, 448] },
+  { amount: 100000, expected: [708, 813, 854, 896, 896] },
+  { amount: 200000, expected: [1417, 1625, 1708, 1792, 1792] },
+  { amount: 500000, expected: [3542, 4063, 4271, 4479, 4479] },
+  { amount: 1000000, expected: [7083, 8125, 8542, 8958, 8958] },
+];
+const mipTenures = [1, 2, 3, 5, 7];
+for (const row of mipTable) {
+  mipTenures.forEach((t, idx) => {
+    const rate = getProductRateForTenure("income", t);
+    const res = calculateValues("income", row.amount, rate, t);
+    const expectedVal = row.expected[idx];
+    assert.equal(
+      Math.round(res.result),
+      expectedVal,
+      `MIP mismatch for ₹${row.amount} at tenure ${t} yr: got ${Math.round(res.result)}, expected ${expectedVal}`
+    );
+  });
+}
+console.log("✓ MIP Table fully verified across all deposit amounts and tenures");
+
+console.log("\n--- C. FD Schedule Table Verification ---");
+const fdTable = [
+  { amount: 10000, expected: [10975, 12155, 13769, 17821] },
+  { amount: 20000, expected: [21950, 24310, 27538, 35642] },
+  { amount: 50000, expected: [54875, 60775, 68845, 89105] },
+  { amount: 100000, expected: [109750, 121551, 137689, 178210] },
+  { amount: 200000, expected: [219500, 243101, 275379, 356420] },
+  { amount: 500000, expected: [548750, 607753, 688446, 891049] },
+];
+const fdTenures = [1, 2, 3, 5];
+for (const row of fdTable) {
+  fdTenures.forEach((t, idx) => {
+    const rate = getProductRateForTenure("growth", t);
+    const res = calculateValues("growth", row.amount, rate, t);
+    const expectedVal = row.expected[idx];
+    assert.equal(
+      Math.round(res.result),
+      expectedVal,
+      `FD mismatch for ₹${row.amount} at tenure ${t} yr: got ${Math.round(res.result)}, expected ${expectedVal}`
+    );
+  });
+}
+console.log("✓ FD Table fully verified across all deposit amounts and tenures");
+
+console.log("\n--- D. RD Schedule Table Verification ---");
+const rdTable = [
+  { amount: 500, expected: [6317, 13283, 21013, 29647, 39841] },
+  { amount: 1000, expected: [12634, 26565, 42027, 59294, 79683] },
+  { amount: 2000, expected: [25268, 53130, 84053, 118588, 159366] },
+  { amount: 3000, expected: [37901, 79695, 126080, 177882, 239049] },
+  { amount: 4000, expected: [50535, 106260, 168107, 237176, 318732] },
+  { amount: 5000, expected: [63169, 132825, 210133, 296470, 398414] },
+];
+const rdTenures = [1, 2, 3, 4, 5];
+for (const row of rdTable) {
+  rdTenures.forEach((t, idx) => {
+    const rate = getProductRateForTenure("monthly", t);
+    const res = calculateValues("monthly", row.amount, rate, t);
+    const expectedVal = row.expected[idx];
+    assert.equal(
+      Math.round(res.result),
+      expectedVal,
+      `RD mismatch for ₹${row.amount} at tenure ${t} yr: got ${Math.round(res.result)}, expected ${expectedVal}`
+    );
+  });
+}
+console.log("✓ RD Table fully verified across all deposit amounts and tenures");
+
+// E. Zero-Rate Tests
 const growthZero = calculateValues("growth", 1000000, 0, 5);
 assert.equal(growthZero.result, 1000000);
 assert.equal(growthZero.growth, 0);
@@ -77,29 +155,26 @@ assert.equal(incomeZero.result, 0);
 assert.equal(incomeZero.formattedResult, "₹0");
 console.log("✓ Zero-rate calculations verified across all three modes");
 
-// C. Representative Boundary Value Tests
-// Growth Boundaries
+// F. Representative Boundary Value Tests
 const growthMin = calculateValues("growth", growthConfig.minAmount, growthConfig.minRate, growthConfig.minTenure);
-assert.equal(growthMin.formattedInvested, "₹50,000");
-assert.equal(Math.round(growthMin.result), 50500); // 50,000 * 1.01
+assert.equal(growthMin.formattedInvested, "₹10,000");
+assert.equal(Math.round(growthMin.result), 10100); // 10,000 * 1.01
 
 const growthMax = calculateValues("growth", growthConfig.maxAmount, growthConfig.maxRate, growthConfig.maxTenure);
 assert.equal(growthMax.formattedInvested, "₹50,00,000");
 assert.ok(growthMax.result > growthConfig.maxAmount);
 
-// Monthly Boundaries
 const monthlyMin = calculateValues("monthly", monthlyConfig.minAmount, monthlyConfig.minRate, monthlyConfig.minTenure);
 assert.equal(monthlyMin.formattedInvested, "₹6,000"); // 500 * 12
 assert.ok(monthlyMin.result > 6000);
 
 const monthlyMax = calculateValues("monthly", monthlyConfig.maxAmount, monthlyConfig.maxRate, monthlyConfig.maxTenure);
-assert.equal(monthlyMax.formattedInvested, "₹1,80,00,000"); // 100,000 * 180
-assert.ok(monthlyMax.result > 18000000);
+assert.equal(monthlyMax.formattedInvested, "₹84,00,000"); // 100,000 * 84 months
+assert.ok(monthlyMax.result > 8400000);
 
-// Income Boundaries
 const incomeMin = calculateValues("income", incomeConfig.minAmount, incomeConfig.minRate, 1);
-assert.equal(incomeMin.formattedInvested, "₹50,000");
-assert.equal(Math.round(incomeMin.result), 42); // 50,000 * 0.01 / 12 = 41.67 -> 42
+assert.equal(incomeMin.formattedInvested, "₹20,000");
+assert.equal(Math.round(incomeMin.result), 17); // 20,000 * 0.01 / 12 = 16.67 -> 17
 
 const incomeMax = calculateValues("income", incomeConfig.maxAmount, incomeConfig.maxRate, 1);
 assert.equal(incomeMax.formattedInvested, "₹50,00,000");

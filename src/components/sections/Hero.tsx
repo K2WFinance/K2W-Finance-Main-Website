@@ -140,7 +140,10 @@ export function Hero() {
         </div>
 
         <div className="hero-bottom">
-          <span>A financial roadmap for working professionals.</span>
+          <span>
+            Your Partner in Financial Growth · A financial roadmap for working
+            professionals.
+          </span>
           <Link href="#plan-explorer" className="scroll-link">
             Explore what’s possible <DownArrowIcon />
           </Link>

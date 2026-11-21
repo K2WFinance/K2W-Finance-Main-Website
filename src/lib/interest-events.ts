@@ -1,8 +1,15 @@
 export type GoalInterest =
-  | "Monthly expenses"
-  | "A new vehicle"
-  | "Your own home"
+  | "Gifts on special days"
+  | "Start your own business"
+  | "Pay off your loans"
+  | "Emergency fund"
   | "Education & family"
+  | "Your own home"
+  | "A new vehicle"
+  | "Grow your wealth"
+  | "Travel & personal dreams"
+  | "Enjoy peace of mind"
+  | "Monthly expenses"
   | "Retirement"
   | "Fixed deposits"
   | "Recurring deposits"
@@ -10,10 +17,17 @@ export type GoalInterest =
   | "I need help deciding";
 
 export const ALLOWED_INTERESTS: readonly GoalInterest[] = [
-  "Monthly expenses",
-  "A new vehicle",
-  "Your own home",
+  "Gifts on special days",
+  "Start your own business",
+  "Pay off your loans",
+  "Emergency fund",
   "Education & family",
+  "Your own home",
+  "A new vehicle",
+  "Grow your wealth",
+  "Travel & personal dreams",
+  "Enjoy peace of mind",
+  "Monthly expenses",
   "Retirement",
   "Fixed deposits",
   "Recurring deposits",

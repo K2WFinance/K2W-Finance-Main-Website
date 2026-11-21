@@ -12,6 +12,7 @@ import {
   formatIndianCurrency,
   formatRate,
   formatTenure,
+  getProductRateForTenure,
 } from "@/lib/calculator";
 
 export function PlanExplorer() {
@@ -31,6 +32,12 @@ export function PlanExplorer() {
     setAmount(newConfig.defaultAmount);
     setRate(newConfig.defaultRate);
     setTenure(newConfig.defaultTenure);
+  };
+
+  const handleTenureChange = (newTenure: number) => {
+    setTenure(newTenure);
+    const scheduledRate = getProductRateForTenure(mode, newTenure);
+    setRate(scheduledRate);
   };
 
   const { formattedResult, resultLabel, resultNote } = calculateValues(
@@ -188,7 +195,10 @@ export function PlanExplorer() {
 
             <div id="tenure-control" hidden={!config.hasTenure}>
               <label htmlFor="tenure">
-                Time to grow <b id="tenure-value">{formatTenure(tenure)}</b>
+                <span id="tenure-label">
+                  {config.tenureLabel || "Time to grow"}
+                </span>{" "}
+                <b id="tenure-value">{formatTenure(tenure)}</b>
               </label>
               <input
                 type="range"
@@ -197,7 +207,7 @@ export function PlanExplorer() {
                 max={config.maxTenure}
                 step={config.stepTenure}
                 value={tenure}
-                onChange={(e) => setTenure(Number(e.target.value))}
+                onChange={(e) => handleTenureChange(Number(e.target.value))}
               />
             </div>
 

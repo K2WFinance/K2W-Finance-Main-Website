@@ -11,7 +11,7 @@ export function Footer() {
         <div className="footer-top">
           <div>
             <Logo />
-            <p>A little clarity for every milestone.</p>
+            <p>Your Partner in Financial Growth.</p>
           </div>
           <div className="footer-links">
             <Link href="#goals">Your goals</Link>

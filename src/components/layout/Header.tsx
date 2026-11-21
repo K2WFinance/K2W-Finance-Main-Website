@@ -8,7 +8,12 @@ export function Header() {
   return (
     <header className="site-header">
       <nav className="wrap header-inner" aria-label="Main navigation">
-        <Logo />
+        <div className="logo-group">
+          <Logo />
+          <span className="header-tagline">
+            Your Partner in Financial Growth
+          </span>
+        </div>
 
         <div className="navlinks">
           <Link href="#goals">Your goals</Link>

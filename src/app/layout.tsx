@@ -14,22 +14,22 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "K2WFINANCE — A clearer plan for what comes next",
+  title: "K2WFINANCE — Your Partner in Financial Growth",
   description:
-    "A financial roadmap for your income, your milestones and the life you’re building. Explore savings and income plans with K2WFINANCE.",
+    "Your Partner in Financial Growth. A financial roadmap for your income, your milestones and the life you’re building. Explore savings and income plans with K2WFINANCE.",
   openGraph: {
-    title: "K2WFINANCE — A clearer plan for what comes next",
+    title: "K2WFINANCE — Your Partner in Financial Growth",
     description:
-      "A financial roadmap for your income, your milestones and the life you’re building. Explore savings and income plans with K2WFINANCE.",
+      "Your Partner in Financial Growth. A financial roadmap for your income, your milestones and the life you’re building. Explore savings and income plans with K2WFINANCE.",
     siteName: "K2WFINANCE",
     locale: "en_IN",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "K2WFINANCE — A clearer plan for what comes next",
+    title: "K2WFINANCE — Your Partner in Financial Growth",
     description:
-      "A financial roadmap for your income, your milestones and the life you’re building. Explore savings and income plans with K2WFINANCE.",
+      "Your Partner in Financial Growth. A financial roadmap for your income, your milestones and the life you’re building. Explore savings and income plans with K2WFINANCE.",
   },
   icons: {
     icon: "/assets/k2wfinance-logo.png",

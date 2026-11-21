@@ -1,6 +1,19 @@
 import { GoalInterest } from "./interest-events";
 
-export type GoalKey = "income" | "vehicle" | "home" | "education" | "retirement";
+export type GoalKey =
+  | "special_days"
+  | "business"
+  | "loans"
+  | "emergency"
+  | "education"
+  | "home"
+  | "family"
+  | "wealth"
+  | "dreams"
+  | "peace"
+  | "income"
+  | "vehicle"
+  | "retirement";
 
 export interface GoalItem {
   key: GoalKey;
@@ -16,6 +29,137 @@ export interface GoalItem {
 }
 
 export const GOALS_DATA: Record<GoalKey, GoalItem> = {
+  special_days: {
+    key: "special_days",
+    navLabel: "Gifts on special days",
+    horizon: "TRADITIONS & OCCASIONS",
+    title: "Buy gifts on special days. Celebrate traditions.",
+    copy: "Celebrate traditions and create lasting value. Plan ahead for festivals, anniversaries and family occasions without disturbing your monthly budget.",
+    kicker: "EXAMPLE OCCASION TARGET",
+    number: "₹1.5 lakh",
+    unit: "set aside for family celebrations",
+    footnote:
+      "A deliberate allocation target to celebrate traditions without taking on short-term debt.",
+    interest: "Gifts on special days",
+  },
+  business: {
+    key: "business",
+    navLabel: "Start your own business",
+    horizon: "ENTREPRENEURSHIP & RUNWAY",
+    title: "Start your own business. Turn savings into opportunity.",
+    copy: "Turn your savings into an income-generating opportunity. Build the initial seed capital and financial cushion you need before taking the leap.",
+    kicker: "EXAMPLE SEED CAPITAL",
+    number: "₹5 lakh",
+    unit: "seed capital & initial working buffer",
+    footnote:
+      "A planning target for initial working capital, equipment and early operating expenses.",
+    interest: "Start your own business",
+  },
+  loans: {
+    key: "loans",
+    navLabel: "Pay off your loans",
+    horizon: "DEBT FREEDOM & CASH FLOW",
+    title: "Pay off your loans. Free up your future income.",
+    copy: "Reduce debt and free up your future income. Target high-cost liabilities with planned lump-sum prepayments to reduce your interest burden.",
+    kicker: "EXAMPLE PREPAYMENT TARGET",
+    number: "₹3 lakh",
+    unit: "lump sum for early debt reduction",
+    footnote:
+      "A planned prepayment amount to significantly lower your tenure and total interest paid.",
+    interest: "Pay off your loans",
+  },
+  emergency: {
+    key: "emergency",
+    navLabel: "Build an emergency fund",
+    horizon: "LIQUIDITY & SAFETY CUSHION",
+    title: "Build an emergency fund. Ready for unexpected costs.",
+    copy: "Keep money aside for unexpected expenses. Build 3–6 months of essential living expenses in safe, accessible deposit structures.",
+    kicker: "RECOMMENDED SAFETY CUSHION",
+    number: "₹3 lakh",
+    unit: "3–6 months of essential household expenses",
+    footnote:
+      "A liquid buffer ensuring health emergencies or career transitions do not disrupt your goals.",
+    interest: "Emergency fund",
+  },
+  education: {
+    key: "education",
+    navLabel: "Invest in education",
+    horizon: "HIGHER STUDIES & SKILLS",
+    title: "Invest in education. Build skills and opportunities.",
+    copy: "Build skills and create better opportunities. Give higher education, global certifications and career advancement their own savings timeline.",
+    kicker: "EXAMPLE EDUCATION FUND",
+    number: "₹4 lakh",
+    unit: "dedicated fund for skills & higher studies",
+    footnote:
+      "A targeted savings milestone for tuition, materials and living expenses during study.",
+    interest: "Education & family",
+  },
+  home: {
+    key: "home",
+    navLabel: "Save for your dream home",
+    horizon: "YOUR NEXT 3–5 YEARS",
+    title: "Save for your dream home. Turn vision into reality.",
+    copy: "Turn your biggest dream into a financial goal. Plan your down payment, registry costs and initial furnishing deliberately over time.",
+    kicker: "EXAMPLE DOWN PAYMENT TARGET",
+    number: "₹10 lakh",
+    unit: "for the place you’ll call home",
+    footnote:
+      "A planning target only. Actual contributions depend on your timeline, property cost and returns.",
+    interest: "Your own home",
+  },
+  family: {
+    key: "family",
+    navLabel: "Secure family’s future",
+    horizon: "FAMILY MILESTONES",
+    title: "Secure your family’s future. Prepare for every milestone.",
+    copy: "Prepare for children’s education, weddings and important family transitions with disciplined, compounding savings.",
+    kicker: "EXAMPLE MILESTONE TARGET",
+    number: "₹8 lakh",
+    unit: "long-term family security fund",
+    footnote:
+      "An illustrative family milestone goal matching future responsibilities with planned deposits.",
+    interest: "Education & family",
+  },
+  wealth: {
+    key: "wealth",
+    navLabel: "Grow your wealth",
+    horizon: "LONG-TERM ACCUMULATION",
+    title: "Grow your wealth. Disciplined long-term compounding.",
+    copy: "Choose suitable investments for long-term financial goals. Harness the proven compounding power of regular, disciplined deposits over 5–7 years.",
+    kicker: "EXAMPLE WEALTH TARGET",
+    number: "₹15 lakh",
+    unit: "accumulated through compounding deposits",
+    footnote:
+      "Planning illustration for long-term corpus accumulation over a 5–7 year horizon.",
+    interest: "Grow your wealth",
+  },
+  dreams: {
+    key: "dreams",
+    navLabel: "Fulfil your dreams",
+    horizon: "TRAVEL & LIFE EXPERIENCES",
+    title: "Fulfil your dreams. Plan for travel and experiences.",
+    copy: "Plan for travel, experiences and personal milestones. Give your passions, vehicle upgrades and adventures a dedicated fund without guilt.",
+    kicker: "EXAMPLE EXPERIENCE BUDGET",
+    number: "₹2.5 lakh",
+    unit: "for travel, exploration and personal goals",
+    footnote:
+      "A dedicated budget for memorable journeys, vehicles and milestone experiences.",
+    interest: "Travel & personal dreams",
+  },
+  peace: {
+    key: "peace",
+    navLabel: "Enjoy peace of mind",
+    horizon: "FINANCIAL SECURITY & CONFIDENCE",
+    title: "Enjoy peace of mind. Build security and confidence.",
+    copy: "Build financial security and confidence. Knowing that your monthly income, family commitments and future are covered brings true peace of mind.",
+    kicker: "ESTIMATED MONTHLY SECURITY",
+    number: "₹8,542",
+    unit: "monthly predictable payout at 10.25% p.a.",
+    footnote:
+      "Calculated as ₹10,00,000 × 10.25% ÷ 12. Predictable monthly cash flow so you can focus on life.",
+    interest: "Monthly income plans",
+  },
+  // Backward compatibility aliases
   income: {
     key: "income",
     navLabel: "Monthly expenses",
@@ -42,32 +186,6 @@ export const GOALS_DATA: Record<GoalKey, GoalItem> = {
       "A goal amount, not a promised maturity value. Explore contributions and assumed rates in the plan explorer.",
     interest: "A new vehicle",
   },
-  home: {
-    key: "home",
-    navLabel: "Your own home",
-    horizon: "YOUR NEXT 5 YEARS",
-    title: "Give your first home a head start.",
-    copy: "Create a dedicated plan for your down payment, separate from emergency funds and everyday commitments.",
-    kicker: "EXAMPLE DOWN PAYMENT TARGET",
-    number: "₹10 lakh",
-    unit: "for the place you’ll call home",
-    footnote:
-      "A planning target only. Actual contributions depend on timeline, returns and costs.",
-    interest: "Your own home",
-  },
-  education: {
-    key: "education",
-    navLabel: "Education & family",
-    horizon: "FUTURE FAMILY MILESTONES",
-    title: "Be ready for the moments that matter.",
-    copy: "Give higher education and family celebrations their own savings timeline. Review the target as costs and priorities change.",
-    kicker: "EXAMPLE MONTHLY CONTRIBUTION",
-    number: "₹2,500",
-    unit: "set aside for a future family goal",
-    footnote:
-      "An example contribution only. No maturity amount or scheme benefit is implied.",
-    interest: "Education & family",
-  },
   retirement: {
     key: "retirement",
     navLabel: "Retirement",
@@ -84,9 +202,14 @@ export const GOALS_DATA: Record<GoalKey, GoalItem> = {
 };
 
 export const GOAL_KEYS: readonly GoalKey[] = [
-  "income",
-  "vehicle",
-  "home",
+  "special_days",
+  "business",
+  "loans",
+  "emergency",
   "education",
-  "retirement",
+  "home",
+  "family",
+  "wealth",
+  "dreams",
+  "peace",
 ] as const;

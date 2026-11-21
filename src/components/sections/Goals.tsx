@@ -10,7 +10,7 @@ import { GOALS_DATA, GOAL_KEYS, GoalKey } from "@/lib/goals-data";
 import { selectInterest } from "@/lib/interest-events";
 
 export function Goals() {
-  const [selectedKey, setSelectedKey] = useState<GoalKey>("income");
+  const [selectedKey, setSelectedKey] = useState<GoalKey>(GOAL_KEYS[0]);
   const containerRef = useRef<HTMLElement>(null);
   const detailRef = useRef<HTMLDivElement>(null);
 

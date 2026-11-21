@@ -132,8 +132,8 @@ async function runBrowserTests() {
       el.dispatchEvent(new Event("change", { bubbles: true }));
     };
     setRangeValue("amount", "2500000");
-    setRangeValue("rate", "10");
     setRangeValue("tenure", "7");
+    setRangeValue("rate", "10");
   });
 
   const updatedResult = await page.$eval("#result", (el) => el.textContent.trim());
@@ -146,22 +146,40 @@ async function runBrowserTests() {
   assert.equal(updatedTenureVal, "7 years");
   assert.equal(updatedResult, "₹48,71,793");
 
-  // Verify weight 700 on updated figures
+  // Verify weight 700 on updated figures & active controls
   const resultWeight = await page.$eval("#result", (el) => window.getComputedStyle(el).fontWeight);
   const amountValWeight = await page.$eval("#amount-value", (el) => window.getComputedStyle(el).fontWeight);
-  console.log(`Computed font weights after update: result=${resultWeight}, amount-value=${amountValWeight}`);
+  const segActiveWeight = await page.$eval('.seg button[aria-pressed="true"]', (el) => window.getComputedStyle(el).fontWeight);
+  console.log(`Computed font weights after update: result=${resultWeight}, amount-value=${amountValWeight}, seg-active=${segActiveWeight}`);
   assert.equal(resultWeight, "700", "Result must use font-weight 700");
   assert.equal(amountValWeight, "700", "Amount label value must use font-weight 700");
+  assert.equal(segActiveWeight, "700", "Selected segment button must use font-weight 700 (bold)");
+
+  // Verify Monthly Income Term slider and MIP calculation
+  console.log("\n--- Testing Monthly Income (MIP) Term & Calculation ---");
+  await page.click('button[data-mode="income"]');
+  const isTenureHidden = await page.$eval("#tenure-control", (el) => el.hidden);
+  assert.equal(isTenureHidden, false, "Monthly income must have Term slider visible");
+  const tenureLabel = await page.$eval("#tenure-label", (el) => el.textContent.trim());
+  assert.equal(tenureLabel, "Term", "Tenure label for income mode must be 'Term'");
+  const incomeResult = await page.$eval("#result", (el) => el.textContent.trim());
+  console.log(`Income default result: ${incomeResult} (expected: ₹8,542 for ₹10L @ 10.25% 3yr)`);
+  assert.equal(incomeResult, "₹8,542");
 
   console.log("\n=================================================");
-  console.log("3. ALL FIVE GOAL CTAS & PRESELECTION VERIFICATION");
+  console.log("3. ALL TEN GOAL CTAS & PRESELECTION VERIFICATION");
   console.log("=================================================");
   const goalTests = [
-    { key: "income", expectedInterest: "Monthly expenses", expectedTitle: "Make room for life’s recurring costs." },
-    { key: "vehicle", expectedInterest: "A new vehicle", expectedTitle: "A new vehicle. A deliberate savings plan." },
-    { key: "home", expectedInterest: "Your own home", expectedTitle: "Give your first home a head start." },
-    { key: "education", expectedInterest: "Education & family", expectedTitle: "Be ready for the moments that matter." },
-    { key: "retirement", expectedInterest: "Retirement", expectedTitle: "Plan an income for your next chapter." },
+    { key: "special_days", expectedInterest: "Gifts on special days", expectedTitle: "Buy gifts on special days. Celebrate traditions." },
+    { key: "business", expectedInterest: "Start your own business", expectedTitle: "Start your own business. Turn savings into opportunity." },
+    { key: "loans", expectedInterest: "Pay off your loans", expectedTitle: "Pay off your loans. Free up your future income." },
+    { key: "emergency", expectedInterest: "Emergency fund", expectedTitle: "Build an emergency fund. Ready for unexpected costs." },
+    { key: "education", expectedInterest: "Education & family", expectedTitle: "Invest in education. Build skills and opportunities." },
+    { key: "home", expectedInterest: "Your own home", expectedTitle: "Save for your dream home. Turn vision into reality." },
+    { key: "family", expectedInterest: "Education & family", expectedTitle: "Secure your family’s future. Prepare for every milestone." },
+    { key: "wealth", expectedInterest: "Grow your wealth", expectedTitle: "Grow your wealth. Disciplined long-term compounding." },
+    { key: "dreams", expectedInterest: "Travel & personal dreams", expectedTitle: "Fulfil your dreams. Plan for travel and experiences." },
+    { key: "peace", expectedInterest: "Monthly income plans", expectedTitle: "Enjoy peace of mind. Build security and confidence." },
   ];
 
   for (const g of goalTests) {
@@ -169,13 +187,16 @@ async function runBrowserTests() {
     const title = await page.$eval("#goal-title", (el) => el.textContent.trim());
     assert.equal(title, g.expectedTitle);
 
+    const goalActiveWeight = await page.$eval(`button[data-goal="${g.key}"]`, (el) => window.getComputedStyle(el).fontWeight);
+    assert.equal(goalActiveWeight, "700", `Selected goal button "${g.key}" must have font-weight 700`);
+
     // Click CTA
     await page.click("#goal-cta");
     const interestVal = await page.$eval("#interest", (el) => el.value);
     console.log(`Goal "${g.key}" CTA -> Form Interest: "${interestVal}" (matches expected: "${g.expectedInterest}")`);
     assert.equal(interestVal, g.expectedInterest);
   }
-  console.log("✓ All 5 goal CTAs successfully verified and preselect into ContactForm");
+  console.log("✓ All 10 goal CTAs successfully verified and preselect into ContactForm");
 
   console.log("\n=================================================");
   console.log("4. ALL THREE SAVINGS-OPTION CTAS VERIFICATION");
@@ -314,10 +335,16 @@ async function runBrowserTests() {
   console.log("✓ Reduced-motion handling verified without spatial animations");
 
   console.log("\n=================================================");
-  console.log("8. FORM VALIDATION & CORRECTION DYNAMICS");
+  console.log("8. BRAND TAGLINE, FORM VALIDATION & CORRECTION");
   console.log("=================================================");
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto(nextUrl, { waitUntil: "networkidle" });
+
+  const headerTagline = await page.$eval(".header-tagline", (el) => el.textContent.trim());
+  const footerTagline = await page.$eval(".footer-top p", (el) => el.textContent.trim());
+  assert.equal(headerTagline, "Your Partner in Financial Growth");
+  assert.equal(footerTagline, "Your Partner in Financial Growth.");
+  console.log("✓ Brand tagline verified in Header and Footer: 'Your Partner in Financial Growth.'");
 
   // 1. Submit empty -> check errors & focus
   await page.click('button[type="submit"]');
