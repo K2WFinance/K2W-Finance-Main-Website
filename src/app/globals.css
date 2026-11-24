@@ -352,11 +352,11 @@ section {
 }
 
 .hero .lead {
-  font-size: 16px;
+  font-size: 18px;
   color: var(--muted);
-  max-width: 445px;
+  max-width: 530px;
   margin-top: 28px;
-  line-height: 1.75;
+  line-height: 1.65;
 }
 
 .cta {
@@ -436,11 +436,11 @@ section {
 
 .intro p {
   font-family: var(--display);
-  font-size: 30px;
-  line-height: 1.45;
-  font-weight: 500;
+  font-size: 36px;
+  line-height: 1.4;
+  font-weight: 600;
   letter-spacing: -0.025em;
-  max-width: 810px;
+  max-width: 900px;
   margin: auto;
 }
 
@@ -476,16 +476,17 @@ section {
 }
 
 .feature-copy > p {
-  font-size: 16px;
-  line-height: 1.75;
+  font-size: 18px;
+  line-height: 1.65;
   color: #e3edff;
-  max-width: 380px;
-  margin-top: 28px;
+  max-width: 480px;
+  margin-top: 24px;
 }
 
 .feature-copy .text-link {
   color: white;
   margin-top: 28px;
+  font-size: 16px;
 }
 
 .feature-points {
@@ -493,7 +494,7 @@ section {
   flex-direction: column;
   gap: 16px;
   margin-top: 55px;
-  max-width: 360px;
+  max-width: 420px;
 }
 
 .feature-points div {
@@ -501,7 +502,7 @@ section {
   align-items: start;
   gap: 15px;
   color: #e5eeff;
-  font-size: 13px;
+  font-size: 15px;
 }
 
 .check {
@@ -526,18 +527,18 @@ section {
 
 .calc-top h2 {
   font-family: var(--sans);
-  font-size: 21px;
+  font-size: 24px;
   font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--ink);
-  margin-bottom: 4px;
+  margin-bottom: 6px;
 }
 
 .calc-hint {
-  font-size: 13px;
+  font-size: 14px;
   color: #61738d;
   margin-bottom: 20px;
-  line-height: 1.4;
+  line-height: 1.45;
 }
 
 .seg {
@@ -741,23 +742,23 @@ input[type="range"] {
 }
 
 .section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: end;
-  gap: 45px;
-  margin-bottom: 60px;
+  display: block;
+  text-align: left;
+  margin-bottom: 48px;
 }
 
 .section-header h2 {
   font-size: 48px;
+  line-height: 1.15;
   max-width: 660px;
 }
 
 .section-header > p {
-  max-width: 330px;
-  font-size: 16px;
+  max-width: 672px;
+  font-size: 18px;
   color: var(--muted);
-  line-height: 1.75;
+  line-height: 1.65;
+  margin-top: 16px;
 }
 
 /* Goals Section */
@@ -977,11 +978,11 @@ input[type="range"] {
 }
 
 .split-heading > p {
-  font-size: 16px;
+  font-size: 18px;
   color: var(--muted);
-  max-width: 440px;
-  line-height: 1.7;
-  margin-top: 22px;
+  max-width: 520px;
+  line-height: 1.65;
+  margin-top: 18px;
 }
 
 .solution-hero-btn {
@@ -1054,7 +1055,7 @@ input[type="range"] {
 }
 
 .solution-body > p {
-  font-size: 15px;
+  font-size: 16px;
   line-height: 1.65;
   color: var(--muted);
   margin: 0 0 14px;
@@ -1073,7 +1074,7 @@ input[type="range"] {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 14px;
+  font-size: 15px;
   color: var(--ink);
   font-weight: 500;
 }
@@ -1086,7 +1087,7 @@ input[type="range"] {
 
 .solution-link {
   display: inline-block;
-  font-size: 14.5px;
+  font-size: 15px;
   font-weight: 600;
   color: var(--blue);
   text-decoration: none;
@@ -1156,7 +1157,7 @@ details[open] > p {
 }
 
 .process .section-header {
-  margin-bottom: 65px;
+  margin-bottom: 48px;
 }
 
 .steps {
@@ -1168,37 +1169,39 @@ details[open] > p {
 .steps article {
   border: 1px solid #dce5f0;
   border-radius: 16px;
-  background: #f8faff;
-  padding: 26px 23px;
+  background: #ffffff;
+  padding: 28px 24px;
   min-width: 0;
-  box-shadow: 0 5px 16px #122c4b04;
+  box-shadow: 0 4px 16px rgba(20, 44, 75, 0.04);
 }
 
 .step-number {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
-  background: #e6eefc;
-  color: #235bd6;
-  border-radius: 11px;
-  font-size: 13px;
-  font-weight: 600;
-  margin-bottom: 26px;
+  width: 40px;
+  height: 40px;
+  background: #fef3c7;
+  color: #b45309;
+  border-radius: 50%;
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 20px;
 }
 
 .steps h3 {
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 700;
-  line-height: 1.35;
-  margin-bottom: 14px;
+  line-height: 1.4;
+  margin-bottom: 10px;
+  color: var(--ink);
 }
 
 .steps p {
-  font-size: 15px;
-  line-height: 1.8;
+  font-size: 16px;
+  line-height: 1.6;
   color: var(--muted);
+  margin: 0;
 }
 
 /* Brand Story */
@@ -1228,19 +1231,28 @@ details[open] > p {
 }
 
 .story-copy h2 {
-  font-size: 46px;
+  font-size: 48px;
+  line-height: 1.15;
 }
 
 .story-copy > p {
-  font-size: 16px;
+  font-size: 18px;
   color: var(--muted);
-  line-height: 1.75;
-  margin-top: 26px;
-  max-width: 390px;
+  line-height: 1.65;
+  margin-top: 24px;
+  max-width: 520px;
+}
+
+.story-copy > p + p {
+  font-size: 16px;
+  margin-top: 16px;
+  line-height: 1.65;
 }
 
 .story-copy .text-link {
   margin-top: 26px;
+  font-size: 16px;
+  font-weight: 600;
 }
 
 /* FAQs Section */
@@ -1284,7 +1296,7 @@ details[open] > p {
 
 .faqs summary {
   padding: 20px 24px;
-  font-size: 16.5px;
+  font-size: 18px;
   font-weight: 600;
   color: var(--ink);
   cursor: pointer;
@@ -1300,8 +1312,8 @@ details[open] > p {
 }
 
 .faq-body > p {
-  font-size: 14.5px;
-  line-height: 1.7;
+  font-size: 16px;
+  line-height: 1.65;
   color: var(--muted);
   margin: 0;
 }
@@ -1319,15 +1331,16 @@ details[open] > p {
 }
 
 .contact-heading h2 {
-  font-size: 54px;
+  font-size: 48px;
+  line-height: 1.15;
 }
 
 .contact-heading > p {
-  font-size: 16px;
+  font-size: 18px;
   color: var(--muted);
-  line-height: 1.75;
-  max-width: 530px;
-  margin: 26px auto 0;
+  line-height: 1.65;
+  max-width: 600px;
+  margin: 20px auto 0;
 }
 
 /* Consultation Cards */
@@ -1424,7 +1437,7 @@ details[open] > p {
 }
 
 .card-desc {
-  font-size: 13.5px;
+  font-size: 14.5px;
   color: var(--muted);
   line-height: 1.5;
   margin: 0 0 16px;
@@ -1434,7 +1447,7 @@ details[open] > p {
 .card-pill {
   display: inline-block;
   align-self: flex-start;
-  font-size: 12px;
+  font-size: 12.5px;
   font-weight: 600;
   color: var(--blue);
   background: var(--ice);
@@ -1456,7 +1469,7 @@ details[open] > p {
 
 .next-steps-card h3 {
   font-family: var(--display);
-  font-size: 19px;
+  font-size: 20px;
   font-weight: 700;
   color: var(--ink);
   margin-bottom: 16px;
@@ -1475,7 +1488,7 @@ details[open] > p {
   display: flex;
   gap: 12px;
   align-items: flex-start;
-  font-size: 13.5px;
+  font-size: 14.5px;
   color: #435b78;
   line-height: 1.5;
 }
@@ -1509,11 +1522,11 @@ details[open] > p {
 
 .contact-note h3 {
   font-family: var(--display);
-  font-size: 27px;
+  font-size: 28px;
   line-height: 1.3;
   font-weight: 700;
   letter-spacing: -0.025em;
-  max-width: 300px;
+  max-width: 320px;
 }
 
 .contact-note ul {
@@ -1526,7 +1539,7 @@ details[open] > p {
   display: flex;
   gap: 11px;
   align-items: center;
-  font-size: 14px;
+  font-size: 15px;
   color: #536a88;
   margin: 15px 0;
 }
@@ -1623,7 +1636,7 @@ details[open] > p {
 }
 
 .form-intro {
-  font-size: 14px;
+  font-size: 15px;
   color: var(--muted);
   margin-bottom: 20px;
   line-height: 1.5;
@@ -1637,7 +1650,7 @@ details[open] > p {
 
 .method-fieldset legend {
   display: block;
-  font-size: 13px;
+  font-size: 14px;
   margin-bottom: 8px;
   color: #314965;
   font-weight: 600;
@@ -1654,7 +1667,7 @@ details[open] > p {
   border-radius: 8px;
   padding: 11px 10px;
   text-align: center;
-  font-size: 13.5px;
+  font-size: 14px;
   font-weight: 500;
   color: #435b78;
   cursor: pointer;
@@ -1718,7 +1731,7 @@ details[open] > p {
 
 .field label {
   display: block;
-  font-size: 13.5px;
+  font-size: 15px;
   font-weight: 600;
   margin-bottom: 8px;
   color: #314965;
@@ -1761,10 +1774,11 @@ details[open] > p {
   display: flex;
   align-items: start;
   gap: 9px;
-  font-size: 12px;
+  font-size: 14px;
   color: #526a87;
   margin: 20px 0;
   cursor: pointer;
+  line-height: 1.5;
 }
 
 .consent input {
@@ -1974,10 +1988,10 @@ form > .btn {
     gap: 15px;
   }
   .steps article {
-    padding: 23px 18px;
+    padding: 24px 20px;
   }
   .steps h3 {
-    font-size: 17px;
+    font-size: 19px;
   }
   .story-grid {
     gap: 50px;
