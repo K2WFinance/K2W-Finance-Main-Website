@@ -4,7 +4,13 @@ export interface LeadSubmissionData {
   name: string;
   phone: string;
   email: string;
+  consultationType: string;
   interest: string;
+  contactMethod: string;
+  callTimePreference?: string;
+  preferredLanguage?: string;
+  city?: string;
+  savingsRange?: string;
   consent: boolean;
   website?: string;
   attribution?: UtmAttribution;
@@ -50,17 +56,30 @@ export function generateUuidV4(): string {
 export function createSubmissionSnapshot(
   data: LeadSubmissionData
 ): SubmissionSnapshot {
+  const payload: LeadSubmissionData = {
+    name: data.name.trim(),
+    phone: data.phone.trim(),
+    email: data.email.trim(),
+    consultationType: data.consultationType ? data.consultationType.trim() : "Savings plan consultation",
+    interest: data.interest.trim(),
+    contactMethod: data.contactMethod ? data.contactMethod.trim() : "Phone call",
+    callTimePreference: data.callTimePreference ? data.callTimePreference.trim() : "No preference",
+    preferredLanguage: data.preferredLanguage ? data.preferredLanguage.trim() : "English",
+    consent: data.consent,
+    website: data.website || "",
+    attribution: data.attribution ? { ...data.attribution } : {},
+  };
+
+  if (data.city && data.city.trim()) {
+    payload.city = data.city.trim();
+  }
+  if (data.savingsRange && data.savingsRange.trim()) {
+    payload.savingsRange = data.savingsRange.trim();
+  }
+
   return {
     idempotencyKey: generateUuidV4(),
-    payload: {
-      name: data.name,
-      phone: data.phone,
-      email: data.email,
-      interest: data.interest,
-      consent: data.consent,
-      website: data.website || "",
-      attribution: data.attribution ? { ...data.attribution } : {},
-    },
+    payload,
   };
 }
 

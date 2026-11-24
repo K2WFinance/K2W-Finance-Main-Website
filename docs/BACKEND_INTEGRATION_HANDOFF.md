@@ -1,55 +1,151 @@
-# K2WFINANCE — Backend API Integration Handoff
+# K2WFINANCE — Backend API Integration & Architecture Handoff
 
-## Current Status
-- **Landing Page Mode:** UI Demo Only.
-- **Form Submission Status:** The consultation request form (`#lead-form`) performs strict client-side validation against all approved fields, highlights invalid inputs with accessible ARIA attributes, and displays an explicit demo completion message:
-  > *"Demo validation complete. No information was sent or saved. Your consultation has not been booked."*
-- **Network / Database Requests:** None. No fake API routes, mock endpoints, or fabricated success states are implemented.
-- **UTM Attribution Status:** The isolated tracking utility (`src/lib/utm.ts` and `src/components/tracking/UtmCapture.tsx`) is ready with storage key `k2wfinance_attribution_v1`, but active collection remains disabled (`UTM_COLLECTION_ENABLED = false`) until an official K2WFINANCE allowlist is approved.
-
----
-
-## Required Information Before API Integration
-
-Before connecting the lead consultation form to a live backend, the backend team / project lead must specify and approve:
-
-1. **Endpoint & HTTP Method:**
-   - E.g., `POST https://api.k2wfinance.com/v1/leads` or Next.js route handler proxy `POST /api/leads`.
-2. **Authentication & Authorization:**
-   - Authentication scheme (Bearer Token, API Key, Webhook secret, etc.).
-   - Note: Any secret-authenticated service MUST be routed through a Next.js Server Route Handler (`src/app/api/leads/route.ts`) so secrets remain server-side and are NEVER exposed to the client browser.
-3. **Request Payload Schema:**
-   - Expected field names and formats:
-     ```json
-     {
-       "name": "string (2-80 chars)",
-       "phone": "string (10-digit Indian mobile number, e.g. 9876543210)",
-       "email": "string (valid email, max 254 chars)",
-       "interest": "string (one of the allowlisted goal options)",
-       "attribution": {
-         "utm_source": "string (optional)",
-         "utm_medium": "string (optional)",
-         "utm_campaign": "string (optional)"
-       }
-     }
-     ```
-4. **Response Envelopes:**
-   - Expected success envelope (e.g. `{ "success": true, "leadId": "..." }`).
-   - Expected error envelope (e.g. `{ "success": false, "error": { "code": "VALIDATION_FAILED", "message": "..." } }`).
-5. **Timeout & Rate Limiting:**
-   - Recommended timeout duration (e.g. 8000ms).
-   - Rate limiting headers and backoff rules.
-6. **Approved UTM Allowlist:**
-   - Specific query parameter names authorized for capture and persistence (e.g. `utm_source`, `utm_medium`, `utm_campaign`, `utm_content`, `utm_term`).
-7. **Environment Variable Names:**
-   - Server-side environment variable names (e.g. `K2W_LEAD_API_URL`, `K2W_LEAD_API_SECRET`), to be configured in `.env.local` for local development, and in Vercel Preview/Production settings separately.
+## 1. Overview & Current Status
+- **Active Branch:** `preview/k2wfinance`
+- **Frontend Form Mode:** Live consultation request form (`#lead-form`) connected to same-origin `POST /api/leads`.
+- **API Version:** Schema Version 2.
+- **Idempotency:** Client-generated UUID v4 sent via `Idempotency-Key` header and matched against body `requestId`.
+- **Protection:** Trusted origin verification, payload bound (16KB), honeypot (`website`), atomic fixed-window rate limiting with keyed HMAC client IP hashing.
+- **Persistence:** MongoDB multi-document transaction linking phone-grouped `leads`, immutable `enquiries`, and `campaign_touchpoints`.
 
 ---
 
-## Future Integration Architecture
+## 2. API Contract Specification (`POST /api/leads`)
 
-When the backend contract is supplied:
-1. A separate integration plan will be proposed for review and approval.
-2. Form submission will route through `src/app/api/leads/route.ts` with server-side validation.
-3. Consumed session attribution will be cleared from `sessionStorage` (`k2wfinance_attribution_v1`) ONLY after verified API success.
-4. Failed requests, network timeouts, or validation errors will preserve entered values and retain stored attribution.
+### Request Headers
+```http
+Content-Type: application/json
+Idempotency-Key: <UUID-v4>
+```
+
+### Request Payload Schema (Version 2)
+```json
+{
+  "requestId": "string (UUID v4, must match Idempotency-Key header)",
+  "name": "string (2–80 chars, Unicode allowed)",
+  "phone": "string (normalized 10-digit Indian mobile, starts with 6–9)",
+  "email": "string (valid email, max 254 chars, lowercased)",
+  "consultationType": "Quick call | Savings plan consultation | Financial roadmap consultancy",
+  "interest": "one of 16 approved GoalInterests",
+  "contactMethod": "Phone call | WhatsApp | Video call (Note: 'In person' is strictly rejected with 400)",
+  "callTimePreference": "No preference | Morning 9–12 | Afternoon 12–4 | Evening 4–8 (optional, default: 'No preference')",
+  "preferredLanguage": "English | Hindi | Kannada | Other (optional, default: 'English')",
+  "city": "string (optional, max 80 chars, omitted if blank)",
+  "savingsRange": "Under ₹5,000 | ₹5,000–15,000 | ₹15,000–50,000 | ₹50,000+ | Prefer not to say (optional, omitted if blank)",
+  "consent": true,
+  "website": "string (honeypot, must be empty)",
+  "attribution": {
+    "utm_source": "string (optional)",
+    "utm_medium": "string (optional)",
+    "utm_campaign": "string (optional)",
+    "utm_content": "string (optional)",
+    "utm_term": "string (optional)",
+    "gclid": "string (optional)",
+    "fbclid": "string (optional)"
+  }
+}
+```
+
+### Success Response Envelope (HTTP 201 Created / HTTP 200 OK)
+```json
+{
+  "success": true,
+  "data": {
+    "enquiryId": "673f...",
+    "message": "Thank you, [Name]. Your consultation request has been received."
+  }
+}
+```
+
+### Error Response Envelope (HTTP 400, 403, 409, 413, 415, 429, 500)
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VALIDATION_FAILED | IDEMPOTENCY_CONFLICT | FORBIDDEN_ORIGIN | RATE_LIMIT_EXCEEDED",
+    "message": "Human-readable description",
+    "fields": {
+      "fieldName": "Specific validation error message"
+    }
+  }
+}
+```
+
+---
+
+## 3. Database Collection Architecture
+
+### A. `leads` Collection (Phone-Grouped Contact Summary)
+Records initial contact identity and tracks activity across submissions:
+```json
+{
+  "_id": "ObjectId",
+  "phone": "9876543210",
+  "name": "User Name",
+  "email": "user@example.com",
+  "firstSeenAt": "ISODate",
+  "lastActiveAt": "ISODate",
+  "totalEnquiries": 1
+}
+```
+
+### B. `enquiries` Collection (Immutable Submission Records)
+Every consultation request is persisted with its submitted details and explicit version tag:
+```json
+{
+  "_id": "ObjectId",
+  "schemaVersion": 2,
+  "leadId": "ObjectId",
+  "idempotencyKey": "UUID-v4",
+  "payloadFingerprint": "SHA-256 hex string",
+  "name": "User Name",
+  "phone": "9876543210",
+  "email": "user@example.com",
+  "consultationType": "Savings plan consultation",
+  "interest": "Fixed deposits",
+  "contactMethod": "Phone call",
+  "callTimePreference": "No preference",
+  "preferredLanguage": "English",
+  "city": "Bengaluru",
+  "savingsRange": "₹15,000–50,000",
+  "consent": true,
+  "status": "received",
+  "createdAt": "ISODate"
+}
+```
+
+### C. `campaign_touchpoints` Collection (Attribution Records)
+Persisted only when attribution keys are present:
+```json
+{
+  "_id": "ObjectId",
+  "leadId": "ObjectId",
+  "enquiryId": "ObjectId",
+  "utm_source": "google",
+  "utm_medium": "cpc",
+  "utm_campaign": "monsoon_2026",
+  "landingPath": "/",
+  "createdAt": "ISODate"
+}
+```
+
+---
+
+## 4. Versioned Idempotency & Legacy Compatibility Rules
+1. **Historical Records:** Legacy records written under schema version 1 lack `schemaVersion` and new consultation preference fields.
+2. **Zero Invalidation:** When an enquiry lookup matches an existing legacy record:
+   - If retried with genuine legacy fields, it is validated against the Version 1 fingerprint and returns the original `200 OK`.
+   - If submitted with new Version 2 consultation fields, it is rejected with `409 Conflict` (preventing cross-schema key collision).
+3. **Version 2 Retries:** Stored records with `schemaVersion: 2` are matched against the canonical Version 2 fingerprint. Matching payloads return `200 OK`; differing payloads return `409 Conflict`.
+4. **Historical Isolation:** Historical records are never modified, rewritten, or backfilled. Missing historical consultation details are read as `undefined` / "Not recorded".
+
+---
+
+## 5. Separate Dashboard Compatibility Notes
+For the separate `k2wfinance-leads-dashboard` repository (read-only reference):
+- It can read `enquiries` documents and safely display fallback values for older records:
+  - `consultationType`: displays submitted type, or falls back to `"Not recorded"` for legacy records.
+  - `contactMethod`: displays submitted method, or falls back to `"Not recorded"` for legacy records.
+  - `callTimePreference` & `preferredLanguage`: displays value or falls back to `"Not recorded"`.
+  - `city` & `savingsRange`: displays value when present.
+- The dashboard repository requires zero modifications for the marketing website deployment.

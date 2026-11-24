@@ -365,6 +365,60 @@ async function runBrowserTests() {
   assert.equal(footerTagline, "Your Partner in Financial Growth.");
   console.log("✓ Brand tagline verified in Header and Footer: 'Your Partner in Financial Growth.'");
 
+  // Verify absence of Privacy Policy and Terms links
+  const legalLinksCount = await page.evaluate(() => {
+    return document.querySelectorAll('a[href*="privacy"], a[href*="terms"]').length;
+  });
+  assert.equal(legalLinksCount, 0, "Zero Privacy Policy or Terms links permitted on page");
+  console.log("✓ Verified: Zero Privacy Policy or Terms links present on page");
+
+  // Verify absence of 'In person' contact method
+  const inPersonElements = await page.evaluate(() => {
+    const text = document.body.innerText;
+    const hasInPerson = text.includes("In person") || text.includes("In-person");
+    return hasInPerson;
+  });
+  assert.equal(inPersonElements, false, "'In person' contact option must be completely absent from UI");
+  console.log("✓ Verified: 'In person' contact option is completely absent from page");
+
+  // Verify safely inactive WhatsApp CTA
+  const whatsappState = await page.evaluate(() => {
+    const btn = document.querySelector(".whatsapp-btn");
+    return {
+      exists: !!btn,
+      ariaDisabled: btn?.getAttribute("aria-disabled"),
+      isButton: btn?.tagName === "BUTTON",
+    };
+  });
+  assert.ok(whatsappState.exists, "WhatsApp CTA must exist");
+  assert.equal(whatsappState.ariaDisabled, "true", "WhatsApp CTA must be accessibly inactive when unconfigured");
+  console.log("✓ Verified: WhatsApp CTA is rendered with reference styling but safely inactive");
+
+  // Test consultation card / dropdown bidirectional synchronization
+  console.log("\n--- Testing Consultation Cards / Dropdown Bidirectional Sync ---");
+  // Default is "Savings plan consultation"
+  let initialSelect = await page.$eval("#consultationType", (el) => el.value);
+  assert.equal(initialSelect, "Savings plan consultation");
+
+  // Click "Quick call" card -> dropdown updates
+  await page.click('button.consult-card:has-text("Quick call")');
+  let updatedSelect1 = await page.$eval("#consultationType", (el) => el.value);
+  assert.equal(updatedSelect1, "Quick call");
+
+  // Click "Financial roadmap consultancy" card -> dropdown updates
+  await page.click('button.consult-card:has-text("Financial roadmap consultancy")');
+  let updatedSelect2 = await page.$eval("#consultationType", (el) => el.value);
+  assert.equal(updatedSelect2, "Financial roadmap consultancy");
+
+  // Change dropdown to "Savings plan consultation" -> card updates active state
+  await page.selectOption("#consultationType", "Savings plan consultation");
+  const isSavingsCardActive = await page.$eval(
+    'button.consult-card:has-text("Savings plan consultation")',
+    (el) => el.classList.contains("active")
+  );
+  assert.equal(isSavingsCardActive, true, "Savings plan consultation card must become active when dropdown changes");
+  console.log("✓ Verified: Consultation cards and dropdown sync bidirectionally in both directions");
+
   // 1. Submit empty -> check errors & focus
   await page.click('button[type="submit"]');
   let nameError = await page.$eval("#name-error", (el) => el.textContent.trim());
@@ -425,7 +479,11 @@ async function runBrowserTests() {
   assert.equal(postBody.name, "Ishant");
   assert.equal(postBody.phone, "+91 98765 43210");
   assert.equal(postBody.email, "valid@example.com");
+  assert.equal(postBody.consultationType, "Savings plan consultation");
   assert.equal(postBody.interest, "Retirement");
+  assert.equal(postBody.contactMethod, "Phone call");
+  assert.equal(postBody.callTimePreference, "No preference");
+  assert.equal(postBody.preferredLanguage, "English");
   assert.equal(postBody.consent, true);
   console.log("✓ Form submission dispatched POST /api/leads with valid Idempotency-Key header & payload");
 

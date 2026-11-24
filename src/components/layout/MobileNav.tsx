@@ -106,6 +106,9 @@ export function MobileNav() {
         <Link href="#process" onClick={closeMenu}>
           Our approach
         </Link>
+        <Link href="#contact" onClick={closeMenu}>
+          Consultation
+        </Link>
         <Link href="#faqs" onClick={closeMenu}>
           FAQs
         </Link>

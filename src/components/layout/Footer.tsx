@@ -17,7 +17,8 @@ export function Footer() {
             <Link href="#goals">Your goals</Link>
             <Link href="#solutions">Savings options</Link>
             <Link href="#process">Our approach</Link>
-            <Link href="#contact">Let’s talk</Link>
+            <Link href="#contact">Consultation</Link>
+            <Link href="#faqs">FAQs</Link>
           </div>
         </div>
         <div className="footer-bottom">
@@ -26,14 +27,9 @@ export function Footer() {
             outcomes. Rates, eligibility, taxation, liquidity and risks depend on
             the provider and applicable terms. Review the relevant product
             documents before making a decision.
-            <br />
-            Client confirmation pending: legal entity, provider relationships,
-            contact details, applicable registrations, privacy policy and terms.
           </p>
           <p className="copyright">
-            © {currentYear} K2WFINANCE
-            <br />
-            Website design prototype
+            © {currentYear} K2WFINANCE. Your Partner in Financial Growth.
           </p>
         </div>
       </div>

@@ -79,11 +79,10 @@ export function Faqs() {
           </details>
 
           <details>
-            <summary>Can I invest through this prototype?</summary>
+            <summary>Is the consultation free?</summary>
             <p>
-              No. This is a website design prototype. It does not open an
-              account, accept money, book a consultation, or send your
-              information.
+              Consultations are currently free for a limited time. Any future
+              charges will be confirmed before you proceed.
             </p>
           </details>
         </ScrollReveal>

@@ -243,7 +243,7 @@ export async function POST(req: NextRequest) {
   }
 
   const normalized = validation.normalized;
-  const payloadFingerprint = computePayloadFingerprint(normalized);
+  const payloadFingerprint = computePayloadFingerprint(normalized, 2);
 
   // 7. Database connection
   let client;
@@ -273,6 +273,25 @@ export async function POST(req: NextRequest) {
     });
 
     if (existingEnquiry) {
+      const isStoredV2 = existingEnquiry.schemaVersion === 2;
+
+      if (!isStoredV2) {
+        // Stored record is a legacy v1 submission.
+        // A new v2 payload containing consultation preferences MUST NOT match an old key.
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              code: "IDEMPOTENCY_CONFLICT",
+              message:
+                "Idempotency key already used for an earlier consultation schema.",
+            },
+          },
+          { status: 409 }
+        );
+      }
+
+      // Stored record is v2 -> compare v2 fingerprint
       if (existingEnquiry.payloadFingerprint === payloadFingerprint) {
         // Idempotent duplicate: return original successful result with 200 OK
         return NextResponse.json(
@@ -415,20 +434,34 @@ export async function POST(req: NextRequest) {
           leadId = leadInsertResult.insertedId;
         }
 
-        // Step B: Immutable Enquiry Record (Stores exact submitted name, phone, email)
+        // Step B: Immutable Enquiry Record (Version 2 Schema)
+        const enquiryDoc: Record<string, unknown> = {
+          schemaVersion: 2,
+          leadId,
+          idempotencyKey: cleanIdempotencyKey,
+          payloadFingerprint,
+          name: normalized.name,
+          phone: normalized.phone,
+          email: normalized.email,
+          consultationType: normalized.consultationType,
+          interest: normalized.interest,
+          contactMethod: normalized.contactMethod,
+          callTimePreference: normalized.callTimePreference,
+          preferredLanguage: normalized.preferredLanguage,
+          consent: normalized.consent,
+          status: "received",
+          createdAt: now,
+        };
+
+        if (normalized.city !== undefined && normalized.city !== "") {
+          enquiryDoc.city = normalized.city;
+        }
+        if (normalized.savingsRange !== undefined) {
+          enquiryDoc.savingsRange = normalized.savingsRange;
+        }
+
         const enquiryInsertResult = await db.collection("enquiries").insertOne(
-          {
-            leadId,
-            idempotencyKey: cleanIdempotencyKey,
-            payloadFingerprint,
-            name: normalized.name,
-            phone: normalized.phone,
-            email: normalized.email,
-            interest: normalized.interest,
-            consent: normalized.consent,
-            status: "received",
-            createdAt: now,
-          },
+          enquiryDoc,
           { session }
         );
         createdEnquiryId = enquiryInsertResult.insertedId;

@@ -19,6 +19,7 @@ export function Header() {
           <Link href="#goals">Your goals</Link>
           <Link href="#solutions">Savings options</Link>
           <Link href="#process">Our approach</Link>
+          <Link href="#contact">Consultation</Link>
           <Link href="#faqs">FAQs</Link>
         </div>
 
