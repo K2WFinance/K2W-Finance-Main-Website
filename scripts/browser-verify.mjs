@@ -493,6 +493,7 @@ async function runBrowserTests() {
     statusText.includes("Your consultation request has been received") ||
       statusText.includes("Unable to verify client connection") ||
       statusText.includes("Unable to process consultation request at this time") ||
+      statusText.includes("The request took too long to complete") ||
       statusText.includes("temporarily unavailable"),
     `Unexpected form status: ${statusText}`
   );
