@@ -118,19 +118,6 @@ export function ContactForm() {
           },
         });
 
-        gsap.from(".next-steps-card", {
-          y: 20,
-          opacity: 0,
-          duration: 0.55,
-          ease: "power3.out",
-          clearProps: "transform,opacity",
-          scrollTrigger: {
-            trigger: ".next-steps-card",
-            start: "top 90%",
-            once: true,
-          },
-        });
-
         gsap.from(".contact-note", {
           y: 22,
           opacity: 0,
@@ -390,116 +377,94 @@ export function ContactForm() {
           <div className="offer-badge-pill">
             Free consultation · For a limited time
           </div>
-          <fieldset className="consultation-cards-group">
-            <legend className="sr-only">Choose a type of consultation</legend>
-            <div className="cards-grid">
-              {/* Card 1: Quick call */}
-              <button
-                type="button"
-                className={`consult-card ${
-                  consultationType === "Quick call" ? "active" : ""
-                }`}
-                onClick={() => handleConsultationCardSelect("Quick call")}
-                aria-pressed={consultationType === "Quick call"}
-              >
-                <div className="card-top">
-                  <span className="card-title">Quick call</span>
-                  {consultationType === "Quick call" && (
-                    <span className="card-check" aria-hidden="true">
-                      ✓
-                    </span>
-                  )}
-                </div>
-                <p className="card-desc">
-                  A brief call to answer your initial questions.
-                </p>
-                <span className="card-pill">Free for a limited time</span>
-              </button>
-
-              {/* Card 2: Savings plan consultation (Default) */}
-              <button
-                type="button"
-                className={`consult-card ${
-                  consultationType === "Savings plan consultation"
-                    ? "active"
-                    : ""
-                }`}
-                onClick={() =>
-                  handleConsultationCardSelect("Savings plan consultation")
-                }
-                aria-pressed={
-                  consultationType === "Savings plan consultation"
-                }
-              >
-                <div className="card-top">
-                  <span className="card-title">
-                    Savings plan consultation
+          <div
+            role="radiogroup"
+            aria-label="Choose a type of consultation"
+            className="cards-grid"
+          >
+            {/* Card 1: Quick call */}
+            <button
+              type="button"
+              role="radio"
+              aria-checked={consultationType === "Quick call"}
+              className={`consult-card ${
+                consultationType === "Quick call" ? "active" : ""
+              }`}
+              onClick={() => handleConsultationCardSelect("Quick call")}
+            >
+              <div className="card-top">
+                <span className="card-title">Quick call</span>
+                {consultationType === "Quick call" && (
+                  <span className="card-check" aria-hidden="true">
+                    ✓
                   </span>
-                  {consultationType === "Savings plan consultation" && (
-                    <span className="card-check" aria-hidden="true">
-                      ✓
-                    </span>
-                  )}
-                </div>
-                <p className="card-desc">
-                  Explore fixed deposits, recurring deposits, and income plans
-                  aligned with your goals.
-                </p>
-                <span className="card-pill">Free for a limited time</span>
-              </button>
+                )}
+              </div>
+              <p className="card-desc">
+                A brief call to answer your initial questions.
+              </p>
+            </button>
 
-              {/* Card 3: Financial roadmap consultancy */}
-              <button
-                type="button"
-                className={`consult-card ${
-                  consultationType === "Financial roadmap consultancy"
-                    ? "active"
-                    : ""
-                }`}
-                onClick={() =>
-                  handleConsultationCardSelect("Financial roadmap consultancy")
-                }
-                aria-pressed={
-                  consultationType === "Financial roadmap consultancy"
-                }
-              >
-                <div className="card-top">
-                  <span className="card-title">
-                    Financial roadmap consultancy
+            {/* Card 2: Savings plan consultation (Default) */}
+            <button
+              type="button"
+              role="radio"
+              aria-checked={consultationType === "Savings plan consultation"}
+              className={`consult-card ${
+                consultationType === "Savings plan consultation"
+                  ? "active"
+                  : ""
+              }`}
+              onClick={() =>
+                handleConsultationCardSelect("Savings plan consultation")
+              }
+            >
+              <div className="card-top">
+                <span className="card-title">Savings plan consultation</span>
+                {consultationType === "Savings plan consultation" && (
+                  <span className="card-check" aria-hidden="true">
+                    ✓
                   </span>
-                  {consultationType === "Financial roadmap consultancy" && (
-                    <span className="card-check" aria-hidden="true">
-                      ✓
-                    </span>
-                  )}
-                </div>
-                <p className="card-desc">
-                  A comprehensive discussion covering your milestones,
-                  timelines, and goal-based savings structures.
-                </p>
-                <span className="card-pill">Free for a limited time</span>
-              </button>
-            </div>
-          </fieldset>
-        </div>
+                )}
+              </div>
+              <p className="card-desc">
+                Explore fixed deposits, recurring deposits, and income plans
+                aligned with your goals.
+              </p>
+            </button>
 
-        {/* What Happens Next Card */}
-        <div className="next-steps-card">
-          <h3>What happens next</h3>
-          <ol className="next-steps-list">
-            <li>
-              <span className="step-num">1</span>
-              <span>We review your consultation request.</span>
-            </li>
-            <li>
-              <span className="step-num">2</span>
-              <span>A team member contacts you at a suitable time.</span>
-            </li>
-            <li>
-              <span className="step-num">3</span>
-              <span>Discuss your goals and explore relevant options.</span>
-            </li>
-          </ol>
+            {/* Card 3: Financial roadmap consultancy */}
+            <button
+              type="button"
+              role="radio"
+              aria-checked={
+                consultationType === "Financial roadmap consultancy"
+              }
+              className={`consult-card ${
+                consultationType === "Financial roadmap consultancy"
+                  ? "active"
+                  : ""
+              }`}
+              onClick={() =>
+                handleConsultationCardSelect("Financial roadmap consultancy")
+              }
+            >
+              <div className="card-top">
+                <span className="card-title">
+                  Financial roadmap consultancy
+                </span>
+                {consultationType === "Financial roadmap consultancy" && (
+                  <span className="card-check" aria-hidden="true">
+                    ✓
+                  </span>
+                )}
+              </div>
+              <p className="card-desc">
+                A comprehensive discussion covering your milestones,
+                timelines, and goal-based savings structures.
+              </p>
+            </button>
+          </div>
         </div>
 
         {/* Main Two-Column Contact Layout */}
@@ -525,7 +490,26 @@ export function ContactForm() {
               </li>
             </ul>
 
-            {/* Confirmed Brand Card */}
+            {/* Compact "What happens next" steps integrated into sidebar */}
+            <div className="sidebar-steps">
+              <h4>What happens next</h4>
+              <ol className="sidebar-steps-list">
+                <li>
+                  <span className="step-num">1</span>
+                  <span>We review your consultation request.</span>
+                </li>
+                <li>
+                  <span className="step-num">2</span>
+                  <span>A team member contacts you at a suitable time.</span>
+                </li>
+                <li>
+                  <span className="step-num">3</span>
+                  <span>Discuss your goals and explore relevant options.</span>
+                </li>
+              </ol>
+            </div>
+
+            {/* Compact Brand Identity Block */}
             <div className="brand-trust-card">
               <div className="brand-avatar" aria-hidden="true">
                 K2W
@@ -533,10 +517,6 @@ export function ContactForm() {
               <div className="brand-info">
                 <p className="brand-name">K2WFINANCE</p>
                 <p className="brand-sub">Discuss your goals with our team</p>
-                <p className="brand-note">
-                  Your Partner in Financial Growth · Free consultation for a
-                  limited time
-                </p>
               </div>
             </div>
 
@@ -556,29 +536,39 @@ export function ContactForm() {
                   Chat on WhatsApp
                 </a>
               ) : (
-                <button
-                  type="button"
-                  className="whatsapp-btn inactive"
-                  aria-disabled="true"
-                  title="WhatsApp consultation will be available once number is configured"
-                  onClick={(e) => e.preventDefault()}
-                >
-                  Chat on WhatsApp
-                </button>
+                <>
+                  <button
+                    type="button"
+                    disabled
+                    aria-disabled="true"
+                    className="whatsapp-btn disabled"
+                    onClick={(e) => e.preventDefault()}
+                  >
+                    Chat on WhatsApp
+                  </button>
+                  <p className="whatsapp-hint">
+                    WhatsApp contact will be available soon.
+                  </p>
+                </>
               )}
             </div>
           </div>
 
-          {/* Form */}
+          {/* Main Enquiry Form */}
           <form id="lead-form" noValidate onSubmit={handleSubmit}>
-            <p className="form-intro">
-              Submit your details to request a consultation.
-            </p>
+            <div className="form-header">
+              <h3>Request your consultation</h3>
+              <p className="form-intro">
+                Fill in your details and our team will get in touch.
+              </p>
+            </div>
 
             <div className="form-grid">
               {/* Full Name */}
               <div className="field full">
-                <label htmlFor="name">Full name *</label>
+                <label htmlFor="name">
+                  Full name&nbsp;<span className="req">*</span>
+                </label>
                 <input
                   ref={nameInputRef}
                   id="name"
@@ -611,7 +601,9 @@ export function ContactForm() {
 
               {/* Indian Mobile Number */}
               <div className="field">
-                <label htmlFor="phone">Indian mobile number *</label>
+                <label htmlFor="phone">
+                  Indian mobile number&nbsp;<span className="req">*</span>
+                </label>
                 <input
                   ref={phoneInputRef}
                   id="phone"
@@ -644,7 +636,9 @@ export function ContactForm() {
 
               {/* Email Address */}
               <div className="field">
-                <label htmlFor="email">Email address *</label>
+                <label htmlFor="email">
+                  Email address&nbsp;<span className="req">*</span>
+                </label>
                 <input
                   ref={emailInputRef}
                   id="email"
@@ -676,9 +670,9 @@ export function ContactForm() {
               </div>
 
               {/* Type of Consultation (Synced with Cards) */}
-              <div className="field">
+              <div className="field full">
                 <label htmlFor="consultationType">
-                  Type of consultation *
+                  Type of consultation&nbsp;<span className="req">*</span>
                 </label>
                 <select
                   ref={consultationTypeSelectRef}
@@ -714,9 +708,9 @@ export function ContactForm() {
               </div>
 
               {/* Goal / Interest Selection */}
-              <div className="field">
+              <div className="field full">
                 <label htmlFor="interest">
-                  What would you like to plan for? *
+                  Your financial goal&nbsp;<span className="req">*</span>
                 </label>
                 <select
                   ref={interestSelectRef}
@@ -760,7 +754,9 @@ export function ContactForm() {
                 aria-describedby="method-error"
                 tabIndex={-1}
               >
-                <legend>How should we reach you? *</legend>
+                <legend>
+                  Preferred contact method&nbsp;<span className="req">*</span>
+                </legend>
                 <div className="method-radios">
                   {ALLOWED_CONTACT_METHODS.map((method) => (
                     <label
@@ -841,7 +837,7 @@ export function ContactForm() {
 
               {/* City (Optional) */}
               <div className="field">
-                <label htmlFor="city">City (optional)</label>
+                <label htmlFor="city">City</label>
                 <input
                   id="city"
                   name="city"
@@ -932,7 +928,7 @@ export function ContactForm() {
               />
               <span>
                 I agree to be contacted by K2WFINANCE regarding my consultation
-                request. *
+                request.&nbsp;<span className="req">*</span>
               </span>
             </label>
             <span className="error" id="consent-error">

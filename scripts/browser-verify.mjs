@@ -42,6 +42,7 @@ async function runBrowserTests() {
     { name: "mobile-390", width: 390, height: 844 },
     { name: "mobile-414", width: 414, height: 896 },
     { name: "tablet-768", width: 768, height: 1024 },
+    { name: "desktop-1024", width: 1024, height: 768 },
     { name: "desktop-1440", width: 1440, height: 900 },
   ];
 
@@ -420,12 +421,29 @@ async function runBrowserTests() {
   assert.equal(isSavingsCardActive, true, "Savings plan consultation card must become active when dropdown changes");
   console.log("✓ Verified: Consultation cards and dropdown sync bidirectionally in both directions");
 
+  const ARTIFACT_DIR = "/Users/Ishant/.gemini/antigravity/brain/d5e03b7c-1824-4dc3-a81b-00d510e02a30";
+  const contactSectionEl = await page.$("#contact");
+  if (contactSectionEl) {
+    await contactSectionEl.screenshot({ path: path.join(SCREENSHOTS_DIR, "contact-section.png") });
+    fs.copyFileSync(path.join(SCREENSHOTS_DIR, "contact-section.png"), path.join(ARTIFACT_DIR, "contact-section.png"));
+  }
+  const formEl = await page.$("#lead-form");
+  if (formEl) {
+    await formEl.screenshot({ path: path.join(SCREENSHOTS_DIR, "form-closeup.png") });
+    fs.copyFileSync(path.join(SCREENSHOTS_DIR, "form-closeup.png"), path.join(ARTIFACT_DIR, "form-closeup.png"));
+  }
+
   // 1. Submit empty -> check errors & focus
   await page.click('button[type="submit"]');
   let nameError = await page.$eval("#name-error", (el) => el.textContent.trim());
   assert.equal(nameError, "Enter a name with 2–80 characters.");
   let focusedId = await page.evaluate(() => document.activeElement.id);
   assert.equal(focusedId, "name", "Focus must move to #name");
+
+  if (formEl) {
+    await formEl.screenshot({ path: path.join(SCREENSHOTS_DIR, "form-validation-error.png") });
+    fs.copyFileSync(path.join(SCREENSHOTS_DIR, "form-validation-error.png"), path.join(ARTIFACT_DIR, "form-validation-error.png"));
+  }
 
   // 2. Type in name -> error clears dynamically
   await page.fill("#name", "Ishant");
