@@ -25,6 +25,7 @@ export function Faqs() {
         </ScrollReveal>
         <ScrollReveal
           selector="details"
+          className="faq-list"
           y={18}
           stagger={0.06}
           duration={0.5}
@@ -32,58 +33,70 @@ export function Faqs() {
         >
           <details open>
             <summary>Where do I begin if I have several goals?</summary>
-            <p>
-              Start with essential expenses and emergency needs. List your goals
-              by date and importance. This helps you decide what needs to remain
-              accessible and what can be set aside for longer.
-            </p>
+            <div className="faq-body">
+              <p>
+                Start with essential expenses and emergency needs. List your goals
+                by date and importance. This helps you decide what needs to remain
+                accessible and what can be set aside for longer.
+              </p>
+            </div>
           </details>
 
           <details>
             <summary>How do fixed and recurring deposits differ?</summary>
-            <p>
-              A fixed deposit starts with a lump sum. A recurring deposit builds
-              through regular contributions. Tenure, interest calculation,
-              missed-payment rules and withdrawal conditions depend on the
-              provider.
-            </p>
+            <div className="faq-body">
+              <p>
+                A fixed deposit starts with a lump sum. A recurring deposit builds
+                through regular contributions. Tenure, interest calculation,
+                missed-payment rules and withdrawal conditions depend on the
+                provider.
+              </p>
+            </div>
           </details>
 
           <details>
             <summary>Are calculator results guaranteed?</summary>
-            <p>
-              No. Results use the amount, assumed rate and tenure you enter. They
-              exclude taxes, charges and product-specific conditions. They are
-              planning illustrations, not quotes or return guarantees.
-            </p>
+            <div className="faq-body">
+              <p>
+                No. Results use the amount, assumed rate and tenure you enter. They
+                exclude taxes, charges and product-specific conditions. They are
+                planning illustrations, not quotes or return guarantees.
+              </p>
+            </div>
           </details>
 
           <details>
             <summary>What should I check about a co-operative deposit?</summary>
-            <p>
-              Confirm the exact legal entity, eligibility, applicable
-              protections, audited information, repayment terms and early
-              withdrawal rules. Do not assume a society deposit has the same
-              protections as a bank deposit.
-            </p>
+            <div className="faq-body">
+              <p>
+                Confirm the exact legal entity, eligibility, applicable
+                protections, audited information, repayment terms and early
+                withdrawal rules. Do not assume a society deposit has the same
+                protections as a bank deposit.
+              </p>
+            </div>
           </details>
 
           <details>
             <summary>Can I plan for a regular monthly payout?</summary>
-            <p>
-              Some deposit structures offer periodic payouts. Available amounts,
-              frequency, tenure and repayment conditions depend on the provider.
-              Discuss these alongside your income needs and liquidity
-              requirements.
-            </p>
+            <div className="faq-body">
+              <p>
+                Some deposit structures offer periodic payouts. Available amounts,
+                frequency, tenure and repayment conditions depend on the provider.
+                Discuss these alongside your income needs and liquidity
+                requirements.
+              </p>
+            </div>
           </details>
 
           <details>
             <summary>Is the consultation free?</summary>
-            <p>
-              Consultations are currently free for a limited time. Any future
-              charges will be confirmed before you proceed.
-            </p>
+            <div className="faq-body">
+              <p>
+                Consultations are currently free for a limited time. Any future
+                charges will be confirmed before you proceed.
+              </p>
+            </div>
           </details>
         </ScrollReveal>
       </div>

@@ -203,6 +203,7 @@ async function runBrowserTests() {
 
   for (const g of goalTests) {
     await page.click(`button[data-goal="${g.key}"]`);
+    await page.waitForTimeout(250);
     const title = await page.$eval("#goal-title", (el) => el.textContent.trim());
     assert.equal(title, g.expectedTitle);
 

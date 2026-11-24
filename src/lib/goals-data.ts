@@ -26,6 +26,7 @@ export interface GoalItem {
   unit: string;
   footnote: string;
   interest: GoalInterest;
+  suggestedOption?: string;
 }
 
 export const GOALS_DATA: Record<GoalKey, GoalItem> = {
@@ -45,15 +46,15 @@ export const GOALS_DATA: Record<GoalKey, GoalItem> = {
   business: {
     key: "business",
     navLabel: "Start Your Own Business",
-    horizon: "ENTREPRENEURSHIP & RUNWAY",
+    horizon: "BUSINESS & ENTERPRISE",
     title: "Start your own business. Turn savings into opportunity.",
-    copy: "Turn your savings into an income-generating opportunity. Build the initial seed capital and financial cushion you need before taking the leap.",
-    kicker: "EXAMPLE SEED CAPITAL",
+    copy: "Keep your startup capital separate from household savings, with a maturity date matched to your launch plan.",
+    kicker: "EXAMPLE BUSINESS FUND",
     number: "₹5 lakh",
-    unit: "seed capital & initial working buffer",
-    footnote:
-      "A planning target for initial working capital, equipment and early operating expenses.",
+    unit: "",
+    footnote: "set aside for 2 years",
     interest: "Start your own business",
+    suggestedOption: "Fixed deposit",
   },
   loans: {
     key: "loans",
@@ -71,15 +72,15 @@ export const GOALS_DATA: Record<GoalKey, GoalItem> = {
   emergency: {
     key: "emergency",
     navLabel: "Build an Emergency Fund",
-    horizon: "LIQUIDITY & SAFETY CUSHION",
+    horizon: "SECURITY & RESILIENCE",
     title: "Build an emergency fund. Ready for unexpected costs.",
-    copy: "Keep money aside for unexpected expenses. Build 3–6 months of essential living expenses in safe, accessible deposit structures.",
-    kicker: "RECOMMENDED SAFETY CUSHION",
-    number: "₹3 lakh",
-    unit: "3–6 months of essential household expenses",
-    footnote:
-      "A liquid buffer ensuring health emergencies or career transitions do not disrupt your goals.",
+    copy: "Keep part of your cushion instantly accessible and the rest in short-term deposits. Check early-withdrawal terms before you choose.",
+    kicker: "EXAMPLE SAFETY CUSHION",
+    number: "6 months",
+    unit: "",
+    footnote: "of essential household expenses",
     interest: "Emergency fund",
+    suggestedOption: "Short-term fixed deposits + savings",
   },
   education: {
     key: "education",
@@ -97,28 +98,28 @@ export const GOALS_DATA: Record<GoalKey, GoalItem> = {
   home: {
     key: "home",
     navLabel: "Save for Your Dream Home",
-    horizon: "YOUR NEXT 3–5 YEARS",
+    horizon: "HOME & BELONGING",
     title: "Save for your dream home. Turn vision into reality.",
-    copy: "Turn your biggest dream into a financial goal. Plan your down payment, registry costs and initial furnishing deliberately over time.",
-    kicker: "EXAMPLE DOWN PAYMENT TARGET",
-    number: "₹10 lakh",
-    unit: "for the place you’ll call home",
-    footnote:
-      "A planning target only. Actual contributions depend on your timeline, property cost and returns.",
+    copy: "Build towards the down payment, registration and moving costs with a monthly habit timed to your purchase date.",
+    kicker: "EXAMPLE MONTHLY PLAN",
+    number: "₹15,000 / month",
+    unit: "",
+    footnote: "for 5 years, towards your down payment",
     interest: "Your own home",
+    suggestedOption: "Recurring deposit",
   },
   family: {
     key: "family",
     navLabel: "Secure Your Family's Future",
-    horizon: "FAMILY MILESTONES",
+    horizon: "EDUCATION & FAMILY",
     title: "Secure your family's future. Prepare for every milestone.",
-    copy: "Prepare for children's education and important milestones with disciplined, compounding savings.",
-    kicker: "EXAMPLE MILESTONE TARGET",
-    number: "₹8 lakh",
-    unit: "long-term family security fund",
-    footnote:
-      "An illustrative family milestone goal matching future responsibilities with planned deposits.",
+    copy: "Time deposits to mature when each fee or milestone is due, so the money arrives when the commitment does.",
+    kicker: "EXAMPLE PLAN",
+    number: "Every June",
+    unit: "",
+    footnote: "a deposit maturing when annual school fees are due",
     interest: "Education & family",
+    suggestedOption: "Fixed deposits, laddered",
   },
   wealth: {
     key: "wealth",
@@ -136,15 +137,15 @@ export const GOALS_DATA: Record<GoalKey, GoalItem> = {
   dreams: {
     key: "dreams",
     navLabel: "Fulfil Your Dreams",
-    horizon: "TRAVEL & LIFE EXPERIENCES",
+    horizon: "TRAVEL & EXPERIENCES",
     title: "Fulfil your dreams. Plan for travel and experiences.",
-    copy: "Plan for travel, experiences and personal milestones. Give your passions, vehicle upgrades and adventures a dedicated fund without guilt.",
-    kicker: "EXAMPLE EXPERIENCE BUDGET",
-    number: "₹2.5 lakh",
-    unit: "for travel, exploration and personal goals",
-    footnote:
-      "A dedicated budget for memorable journeys, vehicles and milestone experiences.",
+    copy: "Set aside a fixed amount each month and give your plans a date instead of a someday.",
+    kicker: "EXAMPLE MONTHLY PLAN",
+    number: "₹5,000 / month",
+    unit: "",
+    footnote: "for 3 years, towards a family trip or milestone celebration",
     interest: "Travel & personal dreams",
+    suggestedOption: "Recurring deposit",
   },
   peace: {
     key: "peace",

@@ -4,7 +4,6 @@ import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { ArrowIcon, GoalIcon } from "../ui/Icons";
 import { FormattedFinancial } from "../ui/FormattedFinancial";
 import { GOALS_DATA, GOAL_KEYS, GoalKey } from "@/lib/goals-data";
 import { selectInterest } from "@/lib/interest-events";
@@ -117,7 +116,7 @@ export function Goals() {
         </div>
 
         <div className="goal-layout">
-          <div className="goal-nav" aria-label="Choose a financial goal">
+          <div className="goal-nav" role="tablist" aria-label="Goals">
             {GOAL_KEYS.map((key) => {
               const goal = GOALS_DATA[key];
               const isSelected = key === selectedKey;
@@ -125,14 +124,13 @@ export function Goals() {
                 <button
                   key={key}
                   type="button"
-                  className="goal"
+                  role="tab"
+                  className={`goal${isSelected ? " active" : ""}`}
                   data-goal={key}
+                  aria-selected={isSelected}
                   aria-pressed={isSelected}
                   onClick={() => handleGoalSelect(key)}
                 >
-                  <span aria-hidden="true">
-                    <GoalIcon goal={key} />
-                  </span>
                   {goal.navLabel}
                 </button>
               );
@@ -140,34 +138,51 @@ export function Goals() {
           </div>
 
           <div ref={detailRef} className="goal-detail" aria-live="polite">
-            <div>
-              <span id="goal-horizon" hidden>
+            <div className="goal-detail-main">
+              <p id="goal-horizon" className="goal-tag">
                 {selectedGoal.horizon}
-              </span>
+              </p>
               <h3 id="goal-title">{selectedGoal.title}</h3>
               <p id="goal-copy">{selectedGoal.copy}</p>
+              <div className="goal-suggested">
+                <span className="suggested-pill">
+                  Suggested option: {selectedGoal.suggestedOption || "Fixed deposits, laddered"}
+                </span>
+              </div>
               <Link
                 href="#contact"
                 id="goal-cta"
+                className="btn primary rounded-pill goal-cta-btn"
                 onClick={handleCtaClick}
               >
-                Plan for this goal <ArrowIcon />
+                Plan for this goal
               </Link>
             </div>
 
-            <div className="goal-number">
-              <span className="goal-card-icon" aria-hidden="true">
-                <GoalIcon goal={selectedKey} />
-              </span>
-              <small id="goal-kicker">
+            <div className="goal-number example-plan-card">
+              <p id="goal-kicker" className="example-label">
                 <FormattedFinancial text={selectedGoal.kicker} />
-              </small>
-              <strong id="goal-number">
-                <FormattedFinancial text={selectedGoal.number} />
-              </strong>
-              <small id="goal-unit">{selectedGoal.unit}</small>
-              <p id="goal-footnote">
+              </p>
+              <p className="example-val">
+                <strong id="goal-number">
+                  <FormattedFinancial text={selectedGoal.number} />
+                </strong>
+                {selectedGoal.unit ? (
+                  <span id="goal-unit" className="example-unit">
+                    {" "}
+                    {selectedGoal.unit}
+                  </span>
+                ) : null}
+              </p>
+              <p id="goal-footnote" className="example-sub">
                 <FormattedFinancial text={selectedGoal.footnote} />
+              </p>
+              <p className="example-disclaimer">
+                Example only. Try your own numbers in the{" "}
+                <a href="#plan-explorer" className="calc-link">
+                  calculator above
+                </a>
+                .
               </p>
             </div>
           </div>
